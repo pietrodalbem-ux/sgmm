@@ -12,75 +12,86 @@ $SGM_EXTRA_SCRIPTS = ['assets/js/gestor-dashboard.js'];
 require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
-<div class="sgm-page-heading mb-4">
-    <h1>Visão geral</h1>
-    <p>Acompanhe o volume de chamados e acesse rapidamente as demandas mais recentes.</p>
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Abertos / Triagem</div>
+            <div class="value" id="stat-aguardando">—</div>
+            <div class="sgm-progress"><span id="bar-aguardando" style="width:0%"></span></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Em atendimento</div>
+            <div class="value" id="stat-em-atendimento">—</div>
+            <div class="sgm-progress"><span id="bar-em-atendimento" style="width:0%"></span></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Concluídos hoje</div>
+            <div class="value" id="stat-concluidos">—</div>
+            <div class="sgm-progress"><span id="bar-concluidos" style="width:0%"></span></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Críticos em aberto</div>
+            <div class="value" id="stat-criticos">—</div>
+            <div class="sgm-progress"><span id="bar-criticos" style="width:0%"></span></div>
+        </div>
+    </div>
 </div>
 
-<div class="sgm-stat-grid mb-4">
-    <div class="sgm-stat-card">
-        <div class="label">Abertos / triagem</div>
-        <div class="value" id="stat-aguardando">—</div>
-        <div class="sgm-progress"><span id="bar-aguardando" style="width:0%"></span></div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Em atendimento</div>
-        <div class="value" id="stat-em-atendimento">—</div>
-        <div class="sgm-progress"><span id="bar-em-atendimento" style="width:0%"></span></div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Concluídos hoje</div>
-        <div class="value" id="stat-concluidos">—</div>
-        <div class="sgm-progress"><span id="bar-concluidos" style="width:0%"></span></div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Críticos em aberto</div>
-        <div class="value" id="stat-criticos">—</div>
-        <div class="sgm-progress"><span id="bar-criticos" style="width:0%"></span></div>
-    </div>
-</div>
-
-<div class="row g-3 mb-4">
+<div class="row g-4 mb-5">
     <div class="col-md-6 col-lg-3">
-        <a href="gestor_chamados.php" class="text-decoration-none d-block h-100">
+        <a href="gestor_chamados.php" class="text-decoration-none">
             <div class="sgm-card sgm-card-pad h-100 d-flex align-items-center gap-3">
-                <i class="bi bi-ticket-perforated fs-2 text-primary"></i>
+                <div class="icon-box bg-primary-subtle p-3 rounded-4">
+                    <i class="bi bi-ticket-perforated fs-3 text-primary"></i>
+                </div>
                 <div>
-                    <div class="fw-semibold text-dark">Chamados</div>
-                    <small class="text-muted">Lista completa e filtros</small>
+                    <div class="fw-bold text-dark">Chamados</div>
+                    <small class="text-muted">Gestão completa</small>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-lg-3">
-        <a href="gestor_blocos.php" class="text-decoration-none d-block h-100">
+        <a href="gestor_blocos.php" class="text-decoration-none">
             <div class="sgm-card sgm-card-pad h-100 d-flex align-items-center gap-3">
-                <i class="bi bi-box-seam fs-2 text-primary"></i>
+                <div class="icon-box bg-info-subtle p-3 rounded-4">
+                    <i class="bi bi-box-seam fs-3 text-info"></i>
+                </div>
                 <div>
-                    <div class="fw-semibold text-dark">Blocos</div>
-                    <small class="text-muted">Cadastro estrutural</small>
+                    <div class="fw-bold text-dark">Blocos</div>
+                    <small class="text-muted">Infraestrutura</small>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-lg-3">
-        <a href="gestor_ambientes.php" class="text-decoration-none d-block h-100">
+        <a href="gestor_ambientes.php" class="text-decoration-none">
             <div class="sgm-card sgm-card-pad h-100 d-flex align-items-center gap-3">
-                <i class="bi bi-building fs-2 text-primary"></i>
+                <div class="icon-box bg-success-subtle p-3 rounded-4">
+                    <i class="bi bi-building fs-3 text-success"></i>
+                </div>
                 <div>
-                    <div class="fw-semibold text-dark">Ambientes</div>
+                    <div class="fw-bold text-dark">Ambientes</div>
                     <small class="text-muted">Salas e laboratórios</small>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-lg-3">
-        <a href="gestor_tipos_servico.php" class="text-decoration-none d-block h-100">
+        <a href="gestor_tipos_servico.php" class="text-decoration-none">
             <div class="sgm-card sgm-card-pad h-100 d-flex align-items-center gap-3">
-                <i class="bi bi-tags fs-2 text-primary"></i>
+                <div class="icon-box bg-warning-subtle p-3 rounded-4">
+                    <i class="bi bi-tags fs-3 text-warning"></i>
+                </div>
                 <div>
-                    <div class="fw-semibold text-dark">Tipos de serviço</div>
-                    <small class="text-muted">Categorias de manutenção</small>
+                    <div class="fw-bold text-dark">Serviços</div>
+                    <small class="text-muted">Categorias</small>
                 </div>
             </div>
         </a>
@@ -88,15 +99,18 @@ require_once __DIR__ . '/includes/app_layout_start.php';
 </div>
 
 <div class="sgm-card">
-    <div class="sgm-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>Chamados recentes</span>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <input type="search" class="form-control sgm-control" id="busca-chamados" placeholder="Buscar na tabela…" style="max-width:220px">
-            <a href="gestor_chamados.php" class="btn btn-sm sgm-btn-primary">Ver todos</a>
+    <div class="sgm-card-header">
+        <span>Chamados Recentes</span>
+        <div class="d-flex gap-3 align-items-center">
+            <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-light border-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control bg-light border-0 rounded-end-pill" id="busca-chamados" placeholder="Filtrar chamados...">
+            </div>
+            <a href="gestor_chamados.php" class="btn sgm-btn-primary btn-sm rounded-pill px-4">Ver todos</a>
         </div>
     </div>
-    <div class="table-responsive sgm-table-wrap border-0 rounded-0">
-        <table class="table sgm-table mb-0">
+    <div class="table-responsive">
+        <table class="table sgm-table align-middle">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -105,14 +119,20 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                     <th>Assunto</th>
                     <th>Prioridade</th>
                     <th>Status</th>
-                    <th class="text-end">Ação</th>
+                    <th class="text-end">Ações</th>
                 </tr>
             </thead>
             <tbody id="lista-chamados-corpo">
-                <tr><td colspan="7" class="text-center text-muted py-4">Carregando…</td></tr>
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                        <span class="text-muted fw-medium">Sincronizando com o banco de dados...</span>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
+
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>

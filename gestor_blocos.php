@@ -12,69 +12,82 @@ $SGM_EXTRA_SCRIPTS = ['assets/js/gestor-blocos.js'];
 require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
-<div class="sgm-page-heading mb-4">
-    <h1>Blocos</h1>
-    <p>Crie e mantenha os blocos utilizados na localização dos chamados.</p>
-</div>
-
-<div id="painelEdicao" class="sgm-card sgm-card-pad sgm-edit-panel d-none mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="h6 mb-0 fw-semibold">Editar bloco</h2>
-        <button type="button" class="btn btn-sm sgm-btn-outline" id="btnFecharEdicao">Fechar</button>
+<div id="painelEdicao" class="sgm-card mb-4 d-none border-primary">
+    <div class="sgm-card-header bg-primary text-white">
+        <span>Editar Bloco</span>
+        <button type="button" class="btn btn-sm btn-close btn-close-white" id="btnFecharEdicao"></button>
     </div>
-    <div class="row g-3">
-        <div class="col-md-5">
-            <label class="sgm-form-label" for="edit_bloco_nome">Nome</label>
-            <input type="text" class="form-control sgm-control" id="edit_bloco_nome" maxlength="120">
-        </div>
-        <div class="col-md-7">
-            <label class="sgm-form-label" for="edit_bloco_desc">Descrição</label>
-            <input type="text" class="form-control sgm-control" id="edit_bloco_desc" maxlength="255">
-        </div>
-        <div class="col-12">
-            <button type="button" class="btn sgm-btn-primary" id="btnSalvarEdicaoBloco">Salvar alterações</button>
-        </div>
-    </div>
-</div>
-
-<div class="sgm-card mb-4">
-    <div class="sgm-card-header">Novo bloco</div>
     <div class="sgm-card-pad">
-        <form id="formNovoBloco" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="sgm-form-label" for="bloco_nome">Nome</label>
-                <input type="text" class="form-control sgm-control" id="bloco_nome" required placeholder="Ex.: Bloco A">
-            </div>
+        <div class="row g-4">
             <div class="col-md-5">
-                <label class="sgm-form-label" for="bloco_descricao">Descrição</label>
-                <input type="text" class="form-control sgm-control" id="bloco_descricao" placeholder="Opcional">
+                <label class="form-label small fw-bold text-muted text-uppercase" for="edit_bloco_nome">Nome do Bloco</label>
+                <input type="text" class="form-control sgm-control" id="edit_bloco_nome" maxlength="120">
             </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn sgm-btn-primary w-100">Adicionar</button>
+            <div class="col-md-7">
+                <label class="form-label small fw-bold text-muted text-uppercase" for="edit_bloco_desc">Descrição / Observações</label>
+                <input type="text" class="form-control sgm-control" id="edit_bloco_desc" maxlength="255">
             </div>
-        </form>
+            <div class="col-12">
+                <button type="button" class="btn sgm-btn-primary px-4" id="btnSalvarEdicaoBloco">
+                    <i class="bi bi-check2-circle me-2"></i>Salvar Alterações
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="sgm-card">
-    <div class="sgm-card-header d-flex justify-content-between align-items-center">
-        <span>Blocos cadastrados</span>
-        <span class="small text-muted" id="blocos-contagem"></span>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="sgm-card h-100">
+            <div class="sgm-card-header">
+                <span>Novo Bloco</span>
+            </div>
+            <div class="sgm-card-pad">
+                <form id="formNovoBloco">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="bloco_nome">Nome</label>
+                        <input type="text" class="form-control sgm-control" id="bloco_nome" required placeholder="Ex.: Bloco A">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="bloco_descricao">Descrição</label>
+                        <textarea class="form-control sgm-control" id="bloco_descricao" rows="3" placeholder="Opcional"></textarea>
+                    </div>
+                    <button type="submit" class="btn sgm-btn-primary w-100 py-3">
+                        <i class="bi bi-plus-lg me-2"></i>Adicionar Bloco
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="table-responsive sgm-table-wrap border-0 rounded-0">
-        <table class="table sgm-table mb-0">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th class="text-end" style="width:8rem">Ações</th>
-                </tr>
-            </thead>
-            <tbody id="lista-blocos-corpo">
-                <tr><td colspan="3" class="text-center text-muted py-4">Carregando…</td></tr>
-            </tbody>
-        </table>
+    
+    <div class="col-lg-8">
+        <div class="sgm-card h-100">
+            <div class="sgm-card-header">
+                <span>Blocos Cadastrados</span>
+                <span class="badge bg-light text-primary rounded-pill" id="blocos-contagem">0</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table sgm-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th class="text-end" style="width:120px">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-blocos-corpo">
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                Carregando dados...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>

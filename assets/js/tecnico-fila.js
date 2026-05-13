@@ -19,15 +19,35 @@
     async function carregar() {
         var wrap = document.getElementById('fila-tarefas');
         var r = await SGM.fetchJson('api/tecnico_chamados.php', 'GET');
+        
         if (!r.res.ok || !r.data || !r.data.success) {
-            wrap.innerHTML =
-                '<div class="alert alert-danger">Não foi possível carregar a fila.</div>';
+            wrap.innerHTML = '<div class="alert alert-danger">Não foi possível carregar a fila.</div>';
             return;
         }
+
         var list = r.data.data || [];
+        var stats = r.data.stats || { total_ativa: 0, total_critica: 0, concluidos_hoje: 0 };
+
+        // Atualizar indicadores
+        if (document.getElementById('task-count')) {
+            document.getElementById('task-count').textContent = stats.total_ativa + (stats.total_ativa === 1 ? ' Tarefa' : ' Tarefas');
+        }
+        if (document.getElementById('stat-done-today')) {
+            document.getElementById('stat-done-today').textContent = stats.concluidos_hoje;
+        }
+        if (document.getElementById('stat-critical-tasks')) {
+            document.getElementById('stat-critical-tasks').textContent = stats.total_critica;
+        }
+
+        // Barras de progresso (exemplo simples de lógica visual)
+        var bars = document.querySelectorAll('.progress-bar');
+        if (bars.length >= 2) {
+            bars[0].style.width = Math.min(100, stats.concluidos_hoje * 10) + '%';
+            bars[1].style.width = Math.min(100, stats.total_critica * 20) + '%';
+        }
+
         if (!list.length) {
-            wrap.innerHTML =
-                '<div class="sgm-card sgm-card-pad text-center text-muted">Nenhuma tarefa ativa no momento.</div>';
+            wrap.innerHTML = '<div class="sgm-card sgm-card-pad text-center text-muted">Nenhuma tarefa ativa no momento.</div>';
             return;
         }
         wrap.innerHTML = list

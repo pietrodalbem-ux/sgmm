@@ -23,23 +23,23 @@ $SGM_EXTRA_SCRIPTS = ['assets/js/gestor-detalhes.js'];
 require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
-<div class="mb-3">
-    <a href="<?php echo htmlspecialchars($voltarHref, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm sgm-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Voltar
+<div class="mb-4">
+    <a href="<?php echo htmlspecialchars($voltarHref, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-light rounded-pill px-4 text-muted fw-bold">
+        <i class="bi bi-arrow-left me-2"></i>Voltar para a lista
     </a>
 </div>
 
 <div class="row g-4">
     <div class="<?php echo $isGestor ? 'col-lg-8' : 'col-12'; ?>">
-        <div class="sgm-card mb-3">
-            <div class="sgm-card-header">Dados da solicitação</div>
+        <div class="sgm-card mb-4">
+            <div class="sgm-card-header">
+                <span>Detalhes da Solicitação</span>
+            </div>
             <div class="sgm-card-pad" id="detalhesChamado">
-                <div class="d-flex align-items-center gap-3 py-4 text-muted">
-                    <div class="sgm-skeleton" style="width:2rem;height:2rem;border-radius:50%"></div>
-                    <div>
-                        <div class="sgm-skeleton mb-2" style="width:180px;height:12px"></div>
-                        <div class="sgm-skeleton" style="width:240px;height:10px"></div>
-                    </div>
+                <!-- Skeleton Loader -->
+                <div class="py-5 text-center">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-3 fw-medium">Obtendo informações do chamado...</p>
                 </div>
             </div>
         </div>
@@ -48,18 +48,20 @@ require_once __DIR__ . '/includes/app_layout_start.php';
 
     <?php if ($isGestor) : ?>
     <div class="col-lg-4">
-        <div class="sgm-card">
-            <div class="sgm-card-header">Gerenciar chamado</div>
+        <div class="sgm-card sticky-top" style="top: 100px; z-index: 800;">
+            <div class="sgm-card-header">
+                <span>Gerenciamento</span>
+            </div>
             <div class="sgm-card-pad">
                 <form id="formAtribuir">
-                    <div class="mb-3">
-                        <label class="sgm-form-label" for="selectTecnico">Técnico responsável</label>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="selectTecnico">Técnico Responsável</label>
                         <select id="selectTecnico" class="form-select sgm-control" required>
-                            <option value="">Selecione…</option>
+                            <option value="">Selecione um técnico...</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="sgm-form-label" for="prioridade">Prioridade</label>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="prioridade">Nível de Prioridade</label>
                         <select id="prioridade" class="form-select sgm-control" required>
                             <option value="baixa">Baixa</option>
                             <option value="media">Média</option>
@@ -67,11 +69,13 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                             <option value="critica">Crítica</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="sgm-form-label" for="data_prevista">Data prevista</label>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="data_prevista">Previsão de Conclusão</label>
                         <input type="date" id="data_prevista" class="form-control sgm-control">
                     </div>
-                    <button type="submit" class="btn sgm-btn-primary w-100">Salvar alterações</button>
+                    <button type="submit" class="btn sgm-btn-primary w-100 py-3 rounded-pill fw-bold">
+                        Atualizar Gestão <i class="bi bi-save2 ms-2"></i>
+                    </button>
                 </form>
             </div>
         </div>
@@ -83,15 +87,14 @@ require_once __DIR__ . '/includes/app_layout_start.php';
 
 <div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-body text-center p-0 bg-dark">
-                <img id="imgModal" class="img-fluid" src="" alt="">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn sgm-btn-outline" data-bs-dismiss="modal">Fechar</button>
+        <div class="modal-content overflow-hidden border-0 shadow-2xl">
+            <div class="modal-body p-0 bg-dark position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow-lg" data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+                <img id="imgModal" class="img-fluid w-100" src="" alt="Evidência do chamado">
             </div>
         </div>
     </div>
 </div>
+
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>

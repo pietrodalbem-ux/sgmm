@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_perfil'] !== 'tecnico') {
 
 $uid = (int) $_SESSION['user_id'];
 
+// 1. Buscar a lista de tarefas ativas
 $sql = "SELECT c.id_chamado, c.titulo, c.descricao_problema, c.status, c.prioridade, c.data_abertura,
                a.nome AS ambiente_nome, b.nome AS bloco_nome,
                u.nome AS solicitante_nome
@@ -26,9 +27,25 @@ $sql = "SELECT c.id_chamado, c.titulo, c.descricao_problema, c.status, c.priorid
                  c.data_abertura ASC";
 
 $res = $conn->query($sql);
-if (!$res) {
-    echo json_encode(['success' => false, 'message' => $conn->error]);
-    exit;
-}
+$chamados = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 
-echo json_encode(['success' => true, 'data' => $res->fetch_all(MYSQLI_ASSOC)]);
+// 2. Buscar estatísticas do técnico
+$sqlStats = "SELECT 
+                COUNT(*) AS total_ativa,
+                SUM(CASE WHEN prioridade = 'critica' THEN 1 ELSE 0 END) AS total_critica,
+                (SELECT COUNT(*) FROM chamados WHERE id_tecnico = $uid AND status = 'concluido' AND DATE(data_conclusao) = CURDATE()) AS concluidos_hoje
+             FROM chamados 
+             WHERE id_tecnico = $uid AND status NOT IN ('concluido', 'cancelado')";
+
+$resStats = $conn->query($sqlStats);
+$stats = $resStats ? $resStats->fetch_assoc() : ['total_ativa' => 0, 'total_critica' => 0, 'concluidos_hoje' => 0];
+
+echo json_encode([
+    'success' => true, 
+    'data' => $chamados,
+    'stats' => [
+        'total_ativa' => (int)($stats['total_ativa'] ?? 0),
+        'total_critica' => (int)($stats['total_critica'] ?? 0),
+        'concluidos_hoje' => (int)($stats['concluidos_hoje'] ?? 0)
+    ]
+]);

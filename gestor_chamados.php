@@ -12,64 +12,81 @@ $SGM_EXTRA_SCRIPTS = ['assets/js/gestor-chamados-page.js'];
 require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
-<div class="sgm-page-heading mb-3">
-    <h1>Chamados</h1>
-    <p>Gerencie todas as solicitações da unidade. Os indicadores abaixo refletem o mesmo painel da visão geral.</p>
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Abertos / Triagem</div>
+            <div class="value" id="gc-stat-ab">—</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Em atendimento</div>
+            <div class="value" id="gc-stat-em">—</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Concluídos hoje</div>
+            <div class="value" id="gc-stat-ok">—</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgm-stat-card">
+            <div class="label">Críticos em aberto</div>
+            <div class="value" id="gc-stat-cr">—</div>
+        </div>
+    </div>
 </div>
 
-<div class="sgm-stat-grid mb-4">
-    <div class="sgm-stat-card">
-        <div class="label">Abertos / triagem</div>
-        <div class="value" id="gc-stat-ab">—</div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Em atendimento</div>
-        <div class="value" id="gc-stat-em">—</div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Concluídos hoje</div>
-        <div class="value" id="gc-stat-ok">—</div>
-    </div>
-    <div class="sgm-stat-card">
-        <div class="label">Críticos em aberto</div>
-        <div class="value" id="gc-stat-cr">—</div>
-    </div>
-</div>
-
-<div class="sgm-card mb-3">
-    <div class="sgm-card-pad py-3">
-        <div class="d-flex flex-wrap align-items-center gap-2 sgm-filter-pills" id="filtros-status">
-            <input type="radio" class="btn-check" name="fstatus" id="fs-todos" value="" autocomplete="off" checked>
-            <label class="btn sgm-btn-outline" for="fs-todos">Todos</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-aberto" value="aberto" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-aberto">Aberto</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-triagem" value="triagem" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-triagem">Triagem</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-and" value="em_andamento" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-and">Em andamento</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-peca" value="aguardando_peca" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-peca">Aguardando peça</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-conc" value="concluido" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-conc">Concluído</label>
-            <input type="radio" class="btn-check" name="fstatus" id="fs-canc" value="cancelado" autocomplete="off">
-            <label class="btn sgm-btn-outline" for="fs-canc">Cancelado</label>
+<div class="sgm-card mb-4">
+    <div class="sgm-card-pad py-4">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-auto">
+                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-2">Filtrar por Status</span>
+                <div class="d-flex flex-wrap gap-2" id="filtros-status">
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-todos" value="" autocomplete="off" checked>
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-todos">Todos</label>
+                    
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-aberto" value="aberto" autocomplete="off">
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-aberto">Abertos</label>
+                    
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-triagem" value="triagem" autocomplete="off">
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-triagem">Triagem</label>
+                    
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-and" value="em_andamento" autocomplete="off">
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-and">Em Andamento</label>
+                    
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-conc" value="concluido" autocomplete="off">
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-conc">Concluídos</label>
+                    
+                    <input type="radio" class="btn-check" name="fstatus" id="fs-canc" value="cancelado" autocomplete="off">
+                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-canc">Cancelados</label>
+                </div>
+            </div>
+            <div class="col-lg ms-lg-auto">
+                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-2">Busca Rápida</span>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="search" class="form-control bg-light border-0 rounded-end-4 sgm-control" id="gc-busca" placeholder="ID, solicitante, local ou assunto...">
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="sgm-card">
-    <div class="sgm-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>Registros</span>
-        <input type="search" class="form-control sgm-control" id="gc-busca" placeholder="Buscar…" style="max-width:260px">
+    <div class="sgm-card-header">
+        <span>Listagem Operacional</span>
     </div>
-    <div class="table-responsive sgm-table-wrap border-0 rounded-0">
-        <table class="table sgm-table mb-0">
+    <div class="table-responsive">
+        <table class="table sgm-table align-middle">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th style="width: 80px">ID</th>
                     <th>Solicitante</th>
-                    <th>Local</th>
-                    <th>Resumo</th>
+                    <th>Localização</th>
+                    <th>Assunto / Resumo</th>
                     <th>Prioridade</th>
                     <th>Técnico</th>
                     <th>Status</th>
@@ -77,10 +94,16 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                 </tr>
             </thead>
             <tbody id="tabelaGeral">
-                <tr><td colspan="8" class="text-center text-muted py-4">Carregando…</td></tr>
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                        <span class="text-muted">Carregando registros...</span>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
+
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>
