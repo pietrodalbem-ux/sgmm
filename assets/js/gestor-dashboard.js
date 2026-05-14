@@ -1,122 +1,189 @@
 (function () {
     'use strict';
 
-    var API_STATS = 'api/dashboard_gestor.php';
-    var API_CH = 'api/gestor_chamados.php';
+    var API_DASHBOARD = 'api/dashboard_gestor.php';
+    var API_CHAMADOS = 'api/gestor_chamados.php';
+    var charts = {};
 
-    var chamadosLista = [];
-
-    async function loadStats() {
-        var r = await SGM.fetchJson(API_STATS, 'GET');
-        if (!r.res.ok || !r.data || r.data.success === false) {
-            SGM.toast((r.data && r.data.message) || 'Não foi possível carregar indicadores.', 'error');
-            return;
+    async function carregarDashboard() {
+        var r = await SGM.fetchJson(API_DASHBOARD);
+        if (r.res.ok && r.data && r.data.success) {
+            atualizarIndicadores(r.data.stats);
+            renderizarGraficos(r.data.charts);
+        } else {
+            console.error('Erro ao carregar dashboard', r.data);
+            SGM.toast('Erro ao carregar indicadores.', 'error');
         }
-        var d = r.data;
-        var total = Math.max(1, d.total || 1);
-        function pct(n) {
-            return Math.min(100, Math.round(((n || 0) / total) * 100));
-        }
-        document.getElementById('stat-aguardando').textContent = d.aguardando_triagem ?? 0;
-        document.getElementById('stat-em-atendimento').textContent = d.em_atendimento ?? 0;
-        document.getElementById('stat-concluidos').textContent = d.concluidos_hoje ?? 0;
-        document.getElementById('stat-criticos').textContent = d.criticos_urgentes ?? 0;
-        document.getElementById('bar-aguardando').style.width = pct(d.aguardando_triagem) + '%';
-        document.getElementById('bar-em-atendimento').style.width = pct(d.em_atendimento) + '%';
-        document.getElementById('bar-concluidos').style.width = pct(d.concluidos_hoje) + '%';
-        document.getElementById('bar-criticos').style.width = pct(d.criticos_urgentes) + '%';
     }
 
-    function renderChamados(list) {
-        var tbody = document.getElementById('lista-chamados-corpo');
-        if (!list.length) {
-            tbody.innerHTML =
-                '<tr><td colspan="7" class="text-center text-muted py-4">Nenhum chamado encontrado.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = list
-            .map(function (c) {
-                var pr = (c.prioridade || '').toString();
-                var st = (c.status || '').toString();
-                var tit = (c.titulo || c.descricao_problema || '').toString();
-                if (tit.length > 48) tit = tit.substring(0, 48) + '…';
-                return (
-                    '<tr>' +
-                    '<td><span class="badge text-bg-light border">' +
-                    SGM.escapeHtml(String(c.id_chamado)) +
-                    '</span></td>' +
-                    '<td class="fw-medium">' +
-                    SGM.escapeHtml(c.solicitante_nome || '') +
-                    '</td>' +
-                    '<td><span class="small text-muted">' +
-                    SGM.escapeHtml(c.bloco_nome || '') +
-                    '</span><br><span class="fw-medium">' +
-                    SGM.escapeHtml(c.ambiente_nome || '') +
-                    '</span></td>' +
-                    '<td class="small">' +
-                    SGM.escapeHtml(tit) +
-                    '</td>' +
-                    '<td><span class="' +
-                    (SGM.priorClass[pr] || 'text-secondary') +
-                    ' fw-semibold small">' +
-                    SGM.escapeHtml(pr.toUpperCase() || '-') +
-                    '</span></td>' +
-                    '<td>' +
-                    SGM.badgeStatus(st) +
-                    '</td>' +
-                    '<td class="text-end"><a class="btn btn-sm sgm-btn-outline" href="gestor_detalhes.php?id=' +
-                    encodeURIComponent(c.id_chamado) +
-                    '">Detalhes</a></td>' +
-                    '</tr>'
-                );
-            })
-            .join('');
+    function atualizarIndicadores(s) {
+        document.getElementById('stat-aguardando').textContent = s.aguardando;
+        document.getElementById('stat-em-atendimento').textContent = s.atendimento;
+        document.getElementById('stat-concluidos').textContent = s.concluidos_hoje;
+        document.getElementById('stat-criticos').textContent = s.criticos;
     }
 
-    async function loadChamados() {
-        var r = await SGM.fetchJson(API_CH + '?status=', 'GET');
-        var tbody = document.getElementById('lista-chamados-corpo');
-        if (!r.res.ok || !Array.isArray(r.data)) {
-            tbody.innerHTML =
-                '<tr><td colspan="7" class="text-center text-danger py-4">Erro ao carregar chamados.</td></tr>';
-            return;
-        }
-        chamadosLista = r.data.slice(0, 15);
-        renderChamados(chamadosLista);
+    function renderizarGraficos(c) {
+        // 1. Gráfico de Evolução (Linha)
+        renderLinha('chartEvolucao', c.evolucao);
+
+        // 2. Gráfico de Status (Doughnut)
+        renderDoughnut('chartStatus', c.status);
+
+        // 3. Gráfico de Técnicos (Barra Horizontal)
+        renderBarraH('chartTecnicos', c.tecnicos);
+
+        // 4. Gráfico de Blocos (Polar Area)
+        renderPolar('chartBlocos', c.blocos);
     }
 
-    function setupBusca() {
-        var inp = document.getElementById('busca-chamados');
-        if (!inp) return;
-        inp.addEventListener('input', function () {
-            var q = inp.value.trim().toLowerCase();
-            if (!q) {
-                renderChamados(chamadosLista);
-                return;
+    function renderLinha(id, data) {
+        if (charts[id]) charts[id].destroy();
+        var ctx = document.getElementById(id).getContext('2d');
+        charts[id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(i => i.mes),
+                datasets: [{
+                    label: 'Chamados Abertos',
+                    data: data.map(i => i.count),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
             }
-            var filtered = chamadosLista.filter(function (c) {
-                return [
-                    c.id_chamado,
-                    c.solicitante_nome,
-                    c.bloco_nome,
-                    c.ambiente_nome,
-                    c.status,
-                    c.prioridade,
-                    c.titulo,
-                    c.descricao_problema,
-                    c.tecnico_nome,
-                ]
-                    .join(' ')
-                    .toLowerCase()
-                    .indexOf(q) !== -1;
-            });
-            renderChamados(filtered);
         });
     }
 
+    function renderDoughnut(id, data) {
+        if (charts[id]) charts[id].destroy();
+        var ctx = document.getElementById(id).getContext('2d');
+        
+        var labels = Object.keys(data).map(k => SGM.labelStatus(k));
+        var values = Object.values(data);
+
+        charts[id] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: ['#0ea5e9', '#64748b', '#f59e0b', '#f59e0b', '#10b981', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    function renderBarraH(id, data) {
+        if (charts[id]) charts[id].destroy();
+        var ctx = document.getElementById(id).getContext('2d');
+        charts[id] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(i => i.nome),
+                datasets: [{
+                    label: 'Chamados',
+                    data: data.map(i => i.count),
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderPolar(id, data) {
+        if (charts[id]) charts[id].destroy();
+        var ctx = document.getElementById(id).getContext('2d');
+        charts[id] = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: data.map(i => i.nome),
+                datasets: [{
+                    data: data.map(i => i.count),
+                    backgroundColor: [
+                        'rgba(37, 99, 235, 0.7)',
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(14, 165, 233, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true } }
+                }
+            }
+        });
+    }
+
+    async function carregarRecentemente() {
+        var r = await SGM.fetchJson(API_CHAMADOS);
+        if (!r.res.ok || !r.data || !r.data.success) return;
+        
+        var chamados = r.data.data.slice(0, 5); // Apenas os 5 mais recentes
+        var html = chamados.map(function (c) {
+            return `
+                <tr>
+                    <td><span class="fw-bold">#${c.id_chamado}</span></td>
+                    <td>
+                        <div class="small fw-semibold text-dark">${SGM.escapeHtml(c.solicitante_nome)}</div>
+                    </td>
+                    <td>
+                        <div class="small text-muted">${SGM.escapeHtml(c.bloco_nome)}</div>
+                        <div class="small fw-medium">${SGM.escapeHtml(c.ambiente_nome)}</div>
+                    </td>
+                    <td><div class="text-truncate" style="max-width: 200px;">${SGM.escapeHtml(c.titulo)}</div></td>
+                    <td><span class="fw-bold small ${SGM.priorClass[c.prioridade]}">${c.prioridade.toUpperCase()}</span></td>
+                    <td>${SGM.badgeStatus(c.status)}</td>
+                    <td class="text-end">
+                        <a href="gestor_detalhes.php?id=${c.id_chamado}" class="btn btn-sm sgm-btn-outline"><i class="bi bi-eye"></i></a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        document.getElementById('lista-chamados-corpo').innerHTML = html || '<tr><td colspan="7" class="text-center py-4">Nenhum chamado recente.</td></tr>';
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        loadStats();
-        loadChamados();
-        setupBusca();
+        carregarDashboard();
+        carregarRecentemente();
+        
+        // Atualização automática a cada 30 segundos
+        setInterval(carregarDashboard, 30000);
     });
 })();

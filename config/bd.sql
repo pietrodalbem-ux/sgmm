@@ -1,6 +1,6 @@
 -- ========================================================
 -- SISTEMA DE GERENCIAMENTO DE MANUTENÇÃO (SGM) - SENAI
--- BANCO DE DATOS PROFISSIONAL E ROBUSTO
+-- BANCO DE DATOS PROFISSIONAL E ROBUSTO (VERSION 2.0 - SOFT DELETE & SECURITY)
 -- ========================================================
 
 CREATE DATABASE IF NOT EXISTS sgm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -11,13 +11,17 @@ CREATE TABLE IF NOT EXISTS departamentos (
     id_departamento INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     sigla VARCHAR(10),
-    responsavel VARCHAR(100)
+    responsavel VARCHAR(100),
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL
 );
 
 CREATE TABLE IF NOT EXISTS blocos (
     id_bloco INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL,
-    descricao TEXT
+    descricao TEXT,
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL
 );
 
 CREATE TABLE IF NOT EXISTS ambientes (
@@ -25,7 +29,9 @@ CREATE TABLE IF NOT EXISTS ambientes (
     id_bloco INT NOT NULL,
     nome VARCHAR(100) NOT NULL,
     ponto_referencia VARCHAR(255),
-    FOREIGN KEY (id_bloco) REFERENCES blocos(id_bloco) ON DELETE CASCADE
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL,
+    FOREIGN KEY (id_bloco) REFERENCES blocos(id_bloco)
 );
 
 -- 2. GESTÃO DE USUÁRIOS (Controle de Acesso)
@@ -42,6 +48,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     ativo TINYINT(1) DEFAULT 1,
     ultimo_login DATETIME,
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL,
     FOREIGN KEY (id_departamento) REFERENCES departamentos(id_departamento)
 );
 
@@ -49,7 +57,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS categorias_equipamento (
     id_categoria INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    icone VARCHAR(50)
+    icone VARCHAR(50),
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL
 );
 
 CREATE TABLE IF NOT EXISTS equipamentos (
@@ -62,6 +72,8 @@ CREATE TABLE IF NOT EXISTS equipamentos (
     numero_serie VARCHAR(100) UNIQUE,
     data_aquisicao DATE,
     status ENUM('operacional', 'manutencao', 'baixado') DEFAULT 'operacional',
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL,
     FOREIGN KEY (id_ambiente) REFERENCES ambientes(id_ambiente),
     FOREIGN KEY (id_categoria) REFERENCES categorias_equipamento(id_categoria)
 );
@@ -71,7 +83,9 @@ CREATE TABLE IF NOT EXISTS tipo_servico (
     id_tipo_servico INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     descricao TEXT,
-    tempo_estimado_horas INT DEFAULT 1
+    tempo_estimado_horas INT DEFAULT 1,
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL
 );
 
 CREATE TABLE IF NOT EXISTS chamados (
@@ -91,6 +105,8 @@ CREATE TABLE IF NOT EXISTS chamados (
     data_conclusao DATETIME,
     feedback_solicitante TEXT,
     avaliacao_estrelas TINYINT(1) CHECK (avaliacao_estrelas BETWEEN 1 AND 5),
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL,
     FOREIGN KEY (id_solicitante) REFERENCES usuarios(id_usuario),
     FOREIGN KEY (id_tecnico) REFERENCES usuarios(id_usuario),
     FOREIGN KEY (id_ambiente) REFERENCES ambientes(id_ambiente),
@@ -104,7 +120,9 @@ CREATE TABLE IF NOT EXISTS materiais (
     nome VARCHAR(100) NOT NULL,
     unidade_medida VARCHAR(20),
     quantidade_estoque INT DEFAULT 0,
-    estoque_minimo INT DEFAULT 5
+    estoque_minimo INT DEFAULT 5,
+    deleted_at DATETIME NULL,
+    deleted_by INT NULL
 );
 
 CREATE TABLE IF NOT EXISTS materiais_chamado (
@@ -112,7 +130,7 @@ CREATE TABLE IF NOT EXISTS materiais_chamado (
     id_chamado INT NOT NULL,
     id_material INT NOT NULL,
     quantidade INT NOT NULL,
-    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado) ON DELETE CASCADE,
+    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado),
     FOREIGN KEY (id_material) REFERENCES materiais(id_material)
 );
 
@@ -123,7 +141,7 @@ CREATE TABLE IF NOT EXISTS chamados_anexos (
     caminho_arquivo VARCHAR(255) NOT NULL,
     tipo_anexo VARCHAR(50) DEFAULT 'evidencia',
     data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado) ON DELETE CASCADE
+    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado)
 );
 
 CREATE TABLE IF NOT EXISTS chamados_historico (
@@ -133,7 +151,7 @@ CREATE TABLE IF NOT EXISTS chamados_historico (
     acao VARCHAR(255) NOT NULL,
     observacao TEXT,
     data_acao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado) ON DELETE CASCADE,
+    FOREIGN KEY (id_chamado) REFERENCES chamados(id_chamado),
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
 );
 
@@ -171,8 +189,10 @@ INSERT INTO tipo_servico (nome, descricao, tempo_estimado_horas) VALUES
 ('Infraestrutura TI', 'Pontos de rede e racks', 4),
 ('Climatização', 'Limpeza e reparo de Ar-condicionado', 5);
 
--- Usuário Padrão (Senha: 123)
+-- Usuários Padrão
+-- Admin: admin@senai.br / 123
 INSERT INTO usuarios (nome, email, senha_hash, perfil, id_departamento) VALUES 
-('Eduarda Gestora', 'admin@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'gestor', 1),
-('Técnico Especialista', 'tecnico@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'tecnico', 1),
-('Aluno Solicitante', 'aluno@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'solicitante', 3);
+('Eduarda Administradora', 'admin@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'admin', 1),
+('Gestor de Operações', 'gestor@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'gestor', 1),
+('Técnico de Manutenção', 'tecnico@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'tecnico', 1),
+('Colaborador Solicitante', 'solicitante@senai.br', '$2y$10$TSwflPXEJ731SnJOTZ/CpeEueRzIBqDBCJeWBSYB9mojR9GLOj/jy', 'solicitante', 3);

@@ -2,119 +2,119 @@
     'use strict';
 
     var API = 'api/api_blocos.php';
-    var blocosCache = [];
     var editId = null;
+    var modal = null;
+    var searchTimeout = null;
 
-    function tbody() {
-        return document.getElementById('lista-blocos-corpo');
-    }
+    function tbody() { return document.getElementById('lista-blocos-corpo'); }
 
     async function carregarLista() {
-        var r = await SGM.fetchJson(API, 'GET');
+        var q = document.getElementById('busca-blocos').value.trim();
+        var url = API + '?q=' + encodeURIComponent(q);
+
+        tbody().innerHTML = '<tr><td colspan="3" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Sincronizando com o banco...</td></tr>';
+
+        var r = await SGM.fetchJson(url, 'GET');
         if (!r.res.ok || !r.data || !r.data.success) {
-            tbody().innerHTML =
-                '<tr><td colspan="3" class="text-center text-danger py-4">Erro ao carregar blocos.</td></tr>';
-            SGM.toast((r.data && r.data.message) || 'Erro ao carregar.', 'error');
+            tbody().innerHTML = '<tr><td colspan="3" class="text-center text-danger py-4">Erro ao carregar dados.</td></tr>';
             return;
         }
-        blocosCache = r.data.data || [];
-        document.getElementById('blocos-contagem').textContent = blocosCache.length + ' registro(s)';
-        if (!blocosCache.length) {
-            tbody().innerHTML =
-                '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum bloco cadastrado.</td></tr>';
+        
+        var list = r.data.data || [];
+        document.getElementById('blocos-contagem').textContent = list.length;
+        
+        if (!list.length) {
+            tbody().innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum bloco encontrado.</td></tr>';
             return;
         }
-        tbody().innerHTML = blocosCache
-            .map(function (b) {
-                var d = (b.descricao || '').substring(0, 100);
-                if ((b.descricao || '').length > 100) d += '…';
-                return (
-                    '<tr data-id="' +
-                    b.id_bloco +
-                    '">' +
-                    '<td class="fw-semibold">' +
-                    SGM.escapeHtml(b.nome) +
-                    '</td>' +
-                    '<td class="text-muted small">' +
-                    SGM.escapeHtml(d) +
-                    '</td>' +
-                    '<td class="text-end">' +
-                    '<button type="button" class="btn btn-sm sgm-btn-outline me-1 btn-edt" title="Editar"><i class="bi bi-pencil"></i></button>' +
-                    '<button type="button" class="btn btn-sm btn-outline-danger btn-del" title="Excluir"><i class="bi bi-trash"></i></button>' +
-                    '</td></tr>'
-                );
-            })
-            .join('');
+
+        tbody().innerHTML = list.map(function (b) {
+            return `
+                <tr data-id="${b.id_bloco}">
+                    <td><div class="fw-bold text-dark">${SGM.escapeHtml(b.nome)}</div></td>
+                    <td><span class="small text-muted">${SGM.escapeHtml(b.descricao || '—')}</span></td>
+                    <td class="text-end actions-column">
+                        <div class="btn-actions-group">
+                            <button type="button" class="btn btn-sm sgm-btn-outline btn-edt" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-del" title="Excluir"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    function fecharEdicao() {
-        editId = null;
-        document.getElementById('painelEdicao').classList.add('d-none');
+    function debounceBusca() {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(carregarLista, 400);
     }
 
-    function abrirEdicao(row) {
-        editId = parseInt(row.id_bloco, 10);
-        document.getElementById('edit_bloco_nome').value = row.nome || '';
-        document.getElementById('edit_bloco_desc').value = row.descricao || '';
-        document.getElementById('painelEdicao').classList.remove('d-none');
-        document.getElementById('painelEdicao').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    document.getElementById('btnFecharEdicao').addEventListener('click', fecharEdicao);
-
-    document.getElementById('btnSalvarEdicaoBloco').addEventListener('click', async function () {
-        if (!editId) return;
-        var nome = document.getElementById('edit_bloco_nome').value.trim();
-        var desc = document.getElementById('edit_bloco_desc').value.trim();
-        if (!nome) {
-            SGM.toast('Informe o nome.', 'error');
-            return;
-        }
-        var r = await SGM.fetchJson(API, 'PUT', { id_bloco: editId, nome: nome, descricao: desc });
-        if (r.res.ok && r.data && r.data.success) {
-            SGM.toast(r.data.message || 'Atualizado.');
-            fecharEdicao();
-            carregarLista();
+    function abrirModal(id) {
+        editId = id;
+        var form = document.getElementById('formBloco');
+        form.reset();
+        document.getElementById('bloco_id').value = id || '';
+        
+        if (id) {
+            document.getElementById('modalTitle').textContent = 'Editar Bloco';
+            // Consulta real ao banco para preencher o formulário
+            SGM.fetchJson(API + '?q=' + id).then(r => {
+                if(r.data && r.data.data && r.data.data.length) {
+                    var b = r.data.data[0];
+                    document.getElementById('bloco_nome').value = b.nome;
+                    document.getElementById('bloco_descricao').value = b.descricao || '';
+                }
+            });
         } else {
-            SGM.toast((r.data && r.data.message) || 'Erro ao salvar.', 'error');
+            document.getElementById('modalTitle').textContent = 'Novo Bloco';
         }
-    });
+        modal.show();
+    }
 
-    document.getElementById('formNovoBloco').addEventListener('submit', async function (e) {
+    document.getElementById('btnAbrirModalNovo').addEventListener('click', () => abrirModal(null));
+    document.getElementById('busca-blocos').addEventListener('input', debounceBusca);
+
+    document.getElementById('formBloco').addEventListener('submit', async function (e) {
         e.preventDefault();
-        var nome = document.getElementById('bloco_nome').value.trim();
-        var desc = document.getElementById('bloco_descricao').value.trim();
-        if (!nome) return;
-        var r = await SGM.fetchJson(API, 'POST', { nome: nome, descricao: desc });
+        var data = {
+            id_bloco: editId,
+            nome: document.getElementById('bloco_nome').value.trim(),
+            descricao: document.getElementById('bloco_descricao').value.trim()
+        };
+
+        var method = editId ? 'PUT' : 'POST';
+        var r = await SGM.fetchJson(API, method, data);
+
         if (r.res.ok && r.data && r.data.success) {
-            SGM.toast(r.data.message || 'Bloco criado.');
-            e.target.reset();
+            SGM.toast(r.data.message);
+            modal.hide();
             carregarLista();
         } else {
-            SGM.toast((r.data && r.data.message) || 'Erro ao criar.', 'error');
+            SGM.toast(r.data ? r.data.message : 'Erro ao salvar', 'error');
         }
     });
 
-    tbody().addEventListener('click', async function (e) {
+    tbody().addEventListener('click', function (e) {
         var tr = e.target.closest('tr[data-id]');
         if (!tr) return;
-        var id = parseInt(tr.getAttribute('data-id'), 10);
-        var row = blocosCache.find(function (x) {
-            return parseInt(x.id_bloco, 10) === id;
-        });
-        if (e.target.closest('.btn-edt') && row) abrirEdicao(row);
-        if (e.target.closest('.btn-del')) {
-            if (!confirm('Excluir este bloco? Esta ação pode falhar se existirem ambientes vinculados.')) return;
-            var r = await SGM.fetchJson(API, 'DELETE', { id_bloco: id });
-            if (r.res.ok && r.data && r.data.success) {
-                SGM.toast(r.data.message || 'Removido.');
-                tr.remove();
-                carregarLista();
-            } else {
-                SGM.toast((r.data && r.data.message) || 'Não foi possível excluir.', 'error');
-            }
-        }
+        var id = tr.getAttribute('data-id');
+        if (e.target.closest('.btn-edt')) abrirModal(id);
+        if (e.target.closest('.btn-del')) confirmarExclusao(id);
     });
 
-    document.addEventListener('DOMContentLoaded', carregarLista);
+    async function confirmarExclusao(id) {
+        if (!confirm('Deseja realmente mover este bloco para a lixeira?')) return;
+        var r = await SGM.fetchJson(API, 'DELETE', { id_bloco: id });
+        if (r.res.ok && r.data && r.data.success) {
+            SGM.toast(r.data.message);
+            carregarLista();
+        } else {
+            SGM.toast(r.data ? r.data.message : 'Erro ao excluir', 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        modal = new bootstrap.Modal(document.getElementById('modalBloco'));
+        carregarLista();
+    });
 })();

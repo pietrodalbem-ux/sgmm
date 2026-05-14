@@ -28,10 +28,15 @@ $avatarName = urlencode($_SESSION['user_nome'] ?? 'U');
 $navGestor = [
     ['key' => 'dashboard', 'label' => 'Visão geral', 'href' => 'gestor_dashboard.php', 'icon' => 'bi-speedometer2'],
     ['key' => 'chamados', 'label' => 'Chamados', 'href' => 'gestor_chamados.php', 'icon' => 'bi-ticket-perforated'],
+    ['key' => 'usuarios', 'label' => 'Usuários', 'href' => 'gestor_usuarios.php', 'icon' => 'bi-people'],
     ['key' => 'blocos', 'label' => 'Blocos', 'href' => 'gestor_blocos.php', 'icon' => 'bi-box-seam'],
     ['key' => 'ambientes', 'label' => 'Ambientes', 'href' => 'gestor_ambientes.php', 'icon' => 'bi-building'],
     ['key' => 'tipos', 'label' => 'Tipos de serviço', 'href' => 'gestor_tipos_servico.php', 'icon' => 'bi-tags'],
 ];
+
+if ($rawPerfil === 'admin') {
+    $navGestor[] = ['key' => 'lixeira', 'label' => 'Lixeira', 'href' => 'gestor_lixeira.php', 'icon' => 'bi-trash3'];
+}
 
 $navSolicitante = [
     ['key' => 'dashboard', 'label' => 'Painel', 'href' => 'solicitante_dashboard.php', 'icon' => 'bi-grid-1x2'],

@@ -269,27 +269,60 @@ body.sgm-app {
     border: 1px solid var(--sgm-border);
     box-shadow: var(--sgm-shadow-lg);
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 1.25rem;
+    transition: var(--sgm-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.sgm-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--sgm-primary);
     transition: var(--sgm-transition);
 }
 
 .sgm-stat-card:hover {
-    border-color: var(--sgm-primary);
+    transform: translateY(-5px);
+}
+
+.sgm-stat-card:hover::after {
+    width: 100%;
+}
+
+.sgm-stat-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: var(--sgm-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.sgm-stat-info {
+    flex: 1;
 }
 
 .sgm-stat-card .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: var(--sgm-text-muted);
+    margin-bottom: 0.25rem;
+    display: block;
 }
 
 .sgm-stat-card .value {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 800;
-    color: var(--sgm-primary);
+    color: var(--sgm-text-main);
+    line-height: 1;
 }
 
 .sgm-progress {
@@ -342,6 +375,17 @@ body.sgm-app {
 
 .sgm-table tbody tr:hover {
     background: var(--sgm-surface-alt);
+}
+
+.actions-column {
+    white-space: nowrap;
+    width: 1px;
+}
+
+.btn-actions-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
 }
 
 /* Buttons */
@@ -460,4 +504,27 @@ body.sgm-app {
 .sgm-toast.success { border-left-color: var(--sgm-success); }
 .sgm-toast.error { border-left-color: var(--sgm-danger); }
 .sgm-toast.info { border-left-color: var(--sgm-info); }
+
+/* Charts container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--sgm-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--sgm-border);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sgm-text-light);
+}
 

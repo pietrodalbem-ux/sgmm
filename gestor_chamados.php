@@ -13,62 +13,82 @@ require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
 <div class="row g-4 mb-5">
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         <div class="sgm-stat-card">
-            <div class="label">Abertos / Triagem</div>
-            <div class="value" id="gc-stat-ab">—</div>
+            <div class="sgm-stat-icon bg-info-subtle text-info">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="sgm-stat-info">
+                <span class="label">Abertos / Triagem</span>
+                <div class="value" id="gc-stat-ab">—</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         <div class="sgm-stat-card">
-            <div class="label">Em atendimento</div>
-            <div class="value" id="gc-stat-em">—</div>
+            <div class="sgm-stat-icon bg-warning-subtle text-warning">
+                <i class="bi bi-play-circle"></i>
+            </div>
+            <div class="sgm-stat-info">
+                <span class="label">Em atendimento</span>
+                <div class="value" id="gc-stat-em">—</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         <div class="sgm-stat-card">
-            <div class="label">Concluídos hoje</div>
-            <div class="value" id="gc-stat-ok">—</div>
+            <div class="sgm-stat-icon bg-success-subtle text-success">
+                <i class="bi bi-check2-all"></i>
+            </div>
+            <div class="sgm-stat-info">
+                <span class="label">Concluídos hoje</span>
+                <div class="value" id="gc-stat-ok">—</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         <div class="sgm-stat-card">
-            <div class="label">Críticos em aberto</div>
-            <div class="value" id="gc-stat-cr">—</div>
+            <div class="sgm-stat-icon bg-danger-subtle text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="sgm-stat-info">
+                <span class="label">Críticos em aberto</span>
+                <div class="value" id="gc-stat-cr">—</div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="sgm-card mb-4">
     <div class="sgm-card-pad py-4">
-        <div class="row align-items-center g-3">
+        <div class="row align-items-center g-4">
             <div class="col-lg-auto">
-                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-2">Filtrar por Status</span>
+                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-3">Filtrar por Status</span>
                 <div class="d-flex flex-wrap gap-2" id="filtros-status">
                     <input type="radio" class="btn-check" name="fstatus" id="fs-todos" value="" autocomplete="off" checked>
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-todos">Todos</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-todos">Todos</label>
                     
                     <input type="radio" class="btn-check" name="fstatus" id="fs-aberto" value="aberto" autocomplete="off">
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-aberto">Abertos</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-aberto">Abertos</label>
                     
                     <input type="radio" class="btn-check" name="fstatus" id="fs-triagem" value="triagem" autocomplete="off">
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-triagem">Triagem</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-triagem">Triagem</label>
                     
                     <input type="radio" class="btn-check" name="fstatus" id="fs-and" value="em_andamento" autocomplete="off">
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-and">Em Andamento</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-and">Andamento</label>
                     
                     <input type="radio" class="btn-check" name="fstatus" id="fs-conc" value="concluido" autocomplete="off">
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-conc">Concluídos</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-conc">Concluídos</label>
                     
                     <input type="radio" class="btn-check" name="fstatus" id="fs-canc" value="cancelado" autocomplete="off">
-                    <label class="btn sgm-btn-outline rounded-pill px-3" for="fs-canc">Cancelados</label>
+                    <label class="btn sgm-btn-outline rounded-pill px-3 py-2" for="fs-canc">Cancelados</label>
                 </div>
             </div>
-            <div class="col-lg ms-lg-auto">
-                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-2">Busca Rápida</span>
+            <div class="col-lg">
+                <span class="text-muted small fw-bold text-uppercase tracking-wider d-block mb-3">Busca Rápida</span>
                 <div class="input-group">
-                    <span class="input-group-text bg-light border-0 rounded-start-4 ps-3"><i class="bi bi-search text-muted"></i></span>
-                    <input type="search" class="form-control bg-light border-0 rounded-end-4 sgm-control" id="gc-busca" placeholder="ID, solicitante, local ou assunto...">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="search" class="form-control bg-light border-0 rounded-end-pill sgm-control" id="gc-busca" placeholder="ID, solicitante, local ou assunto...">
                 </div>
             </div>
         </div>
@@ -77,7 +97,7 @@ require_once __DIR__ . '/includes/app_layout_start.php';
 
 <div class="sgm-card">
     <div class="sgm-card-header">
-        <span>Listagem Operacional</span>
+        <span><i class="bi bi-list-task me-2 text-primary"></i>Listagem Operacional de Chamados</span>
     </div>
     <div class="table-responsive">
         <table class="table sgm-table align-middle">
@@ -90,14 +110,14 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                     <th>Prioridade</th>
                     <th>Técnico</th>
                     <th>Status</th>
-                    <th class="text-end">Ação</th>
+                    <th class="text-end actions-column">Ações</th>
                 </tr>
             </thead>
             <tbody id="tabelaGeral">
                 <tr>
                     <td colspan="8" class="text-center py-5">
                         <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
-                        <span class="text-muted">Carregando registros...</span>
+                        <span class="text-muted fw-medium">Sincronizando com o banco de dados...</span>
                     </td>
                 </tr>
             </tbody>

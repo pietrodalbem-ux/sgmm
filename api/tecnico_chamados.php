@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_perfil'] !== 'tecnico') {
 
 $uid = (int) $_SESSION['user_id'];
 
-// 1. Buscar a lista de tarefas ativas
+// 1. Buscar a lista de tarefas ativas (Backend Real)
 $sql = "SELECT c.id_chamado, c.titulo, c.descricao_problema, c.status, c.prioridade, c.data_abertura,
                a.nome AS ambiente_nome, b.nome AS bloco_nome,
                u.nome AS solicitante_nome
@@ -20,6 +20,7 @@ $sql = "SELECT c.id_chamado, c.titulo, c.descricao_problema, c.status, c.priorid
         JOIN usuarios u ON c.id_solicitante = u.id_usuario
         WHERE c.id_tecnico = $uid
           AND c.status NOT IN ('concluido', 'cancelado')
+          AND c.deleted_at IS NULL
         ORDER BY CASE WHEN c.prioridade = 'critica' THEN 1
                       WHEN c.prioridade = 'alta' THEN 2
                       WHEN c.prioridade = 'media' THEN 3
@@ -29,13 +30,13 @@ $sql = "SELECT c.id_chamado, c.titulo, c.descricao_problema, c.status, c.priorid
 $res = $conn->query($sql);
 $chamados = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 
-// 2. Buscar estatísticas do técnico
+// 2. Buscar estatísticas do técnico via SQL
 $sqlStats = "SELECT 
                 COUNT(*) AS total_ativa,
                 SUM(CASE WHEN prioridade = 'critica' THEN 1 ELSE 0 END) AS total_critica,
-                (SELECT COUNT(*) FROM chamados WHERE id_tecnico = $uid AND status = 'concluido' AND DATE(data_conclusao) = CURDATE()) AS concluidos_hoje
+                (SELECT COUNT(*) FROM chamados WHERE id_tecnico = $uid AND status = 'concluido' AND DATE(data_conclusao) = CURDATE() AND deleted_at IS NULL) AS concluidos_hoje
              FROM chamados 
-             WHERE id_tecnico = $uid AND status NOT IN ('concluido', 'cancelado')";
+             WHERE id_tecnico = $uid AND status NOT IN ('concluido', 'cancelado') AND deleted_at IS NULL";
 
 $resStats = $conn->query($sqlStats);
 $stats = $resStats ? $resStats->fetch_assoc() : ['total_ativa' => 0, 'total_critica' => 0, 'concluidos_hoje' => 0];

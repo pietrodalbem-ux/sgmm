@@ -1,151 +1,132 @@
 (function () {
     'use strict';
 
-    var API_A = 'api/api_ambientes.php';
-    var API_B = 'api/api_blocos.php';
-    var blocosCache = [];
-    var ambCache = [];
+    var API = 'api/api_ambientes.php';
     var editId = null;
+    var modal = null;
+    var searchTimeout = null;
 
-    function selNovo() {
-        return document.getElementById('selectBlocoAmbiente');
-    }
-    function selEdit() {
-        return document.getElementById('edit_amb_bloco');
-    }
-    function tbody() {
-        return document.getElementById('lista-ambientes-corpo');
+    function tbody() { return document.getElementById('lista-ambientes-corpo'); }
+
+    async function carregarLista() {
+        var q = document.getElementById('busca-ambientes').value.trim();
+        var url = API + '?q=' + encodeURIComponent(q);
+
+        tbody().innerHTML = '<tr><td colspan="3" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Buscando no banco...</td></tr>';
+
+        var r = await SGM.fetchJson(url, 'GET');
+        if (!r.res.ok || !r.data || !r.data.success) {
+            tbody().innerHTML = '<tr><td colspan="3" class="text-center text-danger py-4">Erro ao carregar dados.</td></tr>';
+            return;
+        }
+        
+        var list = r.data.data || [];
+        document.getElementById('amb-contagem').textContent = list.length;
+        
+        if (!list.length) {
+            tbody().innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum ambiente encontrado.</td></tr>';
+            return;
+        }
+
+        tbody().innerHTML = list.map(function (a) {
+            return `
+                <tr data-id="${a.id_ambiente}">
+                    <td><div class="fw-bold text-dark">${SGM.escapeHtml(a.nome)}</div></td>
+                    <td><span class="badge bg-light text-primary border rounded-pill px-3">${SGM.escapeHtml(a.bloco_nome)}</span></td>
+                    <td class="text-end actions-column">
+                        <div class="btn-actions-group">
+                            <button type="button" class="btn btn-sm sgm-btn-outline btn-edt" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-del" title="Excluir"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    function fillBlocoSelects() {
-        var opts = blocosCache
-            .map(function (b) {
-                return '<option value="' + b.id_bloco + '">' + SGM.escapeHtml(b.nome) + '</option>';
-            })
-            .join('');
-        selNovo().innerHTML = '<option value="" disabled selected>Selecione o bloco</option>' + opts;
-        selEdit().innerHTML = opts;
+    function debounceBusca() {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(carregarLista, 400);
     }
 
     async function carregarBlocos() {
-        var r = await SGM.fetchJson(API_B, 'GET');
+        var r = await SGM.fetchJson('api/api_blocos.php', 'GET');
         if (r.res.ok && r.data && r.data.success) {
-            blocosCache = r.data.data || [];
-            fillBlocoSelects();
+            var sel = document.getElementById('amb_bloco');
+            sel.innerHTML = '<option value="" disabled selected>Selecione um bloco...</option>';
+            r.data.data.forEach(b => {
+                sel.innerHTML += `<option value="${b.id_bloco}">${SGM.escapeHtml(b.nome)}</option>`;
+            });
         }
     }
 
-    async function carregarAmbientes() {
-        var r = await SGM.fetchJson(API_A, 'GET');
-        if (!r.res.ok || !r.data || !r.data.success) {
-            tbody().innerHTML =
-                '<tr><td colspan="3" class="text-center text-danger py-4">Erro ao carregar ambientes.</td></tr>';
-            return;
-        }
-        ambCache = r.data.data || [];
-        document.getElementById('amb-contagem').textContent = ambCache.length + ' registro(s)';
-        if (!ambCache.length) {
-            tbody().innerHTML =
-                '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum ambiente cadastrado.</td></tr>';
-            return;
-        }
-        tbody().innerHTML = ambCache
-            .map(function (a) {
-                return (
-                    '<tr data-id="' +
-                    a.id_ambiente +
-                    '">' +
-                    '<td class="fw-semibold">' +
-                    SGM.escapeHtml(a.nome) +
-                    '</td>' +
-                    '<td>' +
-                    SGM.escapeHtml(a.nome_bloco || '') +
-                    '</td>' +
-                    '<td class="text-end">' +
-                    '<button type="button" class="btn btn-sm sgm-btn-outline me-1 btn-edt"><i class="bi bi-pencil"></i></button>' +
-                    '<button type="button" class="btn btn-sm btn-outline-danger btn-del"><i class="bi bi-trash"></i></button>' +
-                    '</td></tr>'
-                );
-            })
-            .join('');
-    }
-
-    function fecharEdicao() {
-        editId = null;
-        document.getElementById('painelEdicao').classList.add('d-none');
-    }
-
-    document.getElementById('btnFecharEdicao').addEventListener('click', fecharEdicao);
-
-    document.getElementById('btnSalvarEdicaoAmb').addEventListener('click', async function () {
-        if (!editId) return;
-        var nome = document.getElementById('edit_amb_nome').value.trim();
-        var id_bloco = parseInt(selEdit().value, 10);
-        if (!nome || !id_bloco) {
-            SGM.toast('Preencha nome e bloco.', 'error');
-            return;
-        }
-        var r = await SGM.fetchJson(API_A, 'PUT', {
-            id_ambiente: editId,
-            nome: nome,
-            id_bloco: id_bloco,
-        });
-        if (r.res.ok && r.data && r.data.success) {
-            SGM.toast(r.data.message || 'Atualizado.');
-            fecharEdicao();
-            carregarAmbientes();
+    function abrirModal(id) {
+        editId = id;
+        var form = document.getElementById('formAmbiente');
+        form.reset();
+        document.getElementById('amb_id').value = id || '';
+        
+        if (id) {
+            document.getElementById('modalTitle').textContent = 'Editar Ambiente';
+            // Consulta real ao banco para preencher o formulário
+            SGM.fetchJson(API + '?q=' + id).then(r => {
+                if(r.data && r.data.data && r.data.data.length) {
+                    var a = r.data.data[0];
+                    document.getElementById('amb_nome').value = a.nome;
+                    document.getElementById('amb_bloco').value = a.id_bloco;
+                }
+            });
         } else {
-            SGM.toast((r.data && r.data.message) || 'Erro ao salvar.', 'error');
+            document.getElementById('modalTitle').textContent = 'Novo Ambiente';
         }
-    });
+        modal.show();
+    }
 
-    document.getElementById('formNovoAmbiente').addEventListener('submit', async function (e) {
+    document.getElementById('btnAbrirModalNovo').addEventListener('click', () => abrirModal(null));
+    document.getElementById('busca-ambientes').addEventListener('input', debounceBusca);
+
+    document.getElementById('formAmbiente').addEventListener('submit', async function (e) {
         e.preventDefault();
-        var nome = document.getElementById('ambiente_nome').value.trim();
-        var id_bloco = parseInt(selNovo().value, 10);
-        if (!nome || !id_bloco) {
-            SGM.toast('Preencha todos os campos.', 'error');
-            return;
-        }
-        var r = await SGM.fetchJson(API_A, 'POST', { nome: nome, id_bloco: id_bloco });
+        var data = {
+            id_ambiente: editId,
+            id_bloco: document.getElementById('amb_bloco').value,
+            nome: document.getElementById('amb_nome').value.trim()
+        };
+
+        var method = editId ? 'PUT' : 'POST';
+        var r = await SGM.fetchJson(API, method, data);
+
         if (r.res.ok && r.data && r.data.success) {
-            SGM.toast(r.data.message || 'Ambiente criado.');
-            e.target.reset();
-            fillBlocoSelects();
-            carregarAmbientes();
+            SGM.toast(r.data.message);
+            modal.hide();
+            carregarLista();
         } else {
-            SGM.toast((r.data && r.data.message) || 'Erro ao criar.', 'error');
+            SGM.toast(r.data ? r.data.message : 'Erro ao salvar', 'error');
         }
     });
 
-    tbody().addEventListener('click', async function (e) {
+    tbody().addEventListener('click', function (e) {
         var tr = e.target.closest('tr[data-id]');
         if (!tr) return;
-        var id = parseInt(tr.getAttribute('data-id'), 10);
-        var row = ambCache.find(function (x) {
-            return parseInt(x.id_ambiente, 10) === id;
-        });
-        if (e.target.closest('.btn-edt') && row) {
-            editId = id;
-            document.getElementById('edit_amb_nome').value = row.nome || '';
-            selEdit().value = String(row.id_bloco);
-            document.getElementById('painelEdicao').classList.remove('d-none');
-            document.getElementById('painelEdicao').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        if (e.target.closest('.btn-del')) {
-            if (!confirm('Excluir este ambiente?')) return;
-            var r = await SGM.fetchJson(API_A, 'DELETE', { id_ambiente: id });
-            if (r.res.ok && r.data && r.data.success) {
-                SGM.toast(r.data.message || 'Removido.');
-                carregarAmbientes();
-            } else {
-                SGM.toast((r.data && r.data.message) || 'Não foi possível excluir.', 'error');
-            }
-        }
+        var id = tr.getAttribute('data-id');
+        if (e.target.closest('.btn-edt')) abrirModal(id);
+        if (e.target.closest('.btn-del')) confirmarExclusao(id);
     });
 
-    document.addEventListener('DOMContentLoaded', async function () {
-        await carregarBlocos();
-        await carregarAmbientes();
+    async function confirmarExclusao(id) {
+        if (!confirm('Deseja realmente mover este ambiente para a lixeira?')) return;
+        var r = await SGM.fetchJson(API, 'DELETE', { id_ambiente: id });
+        if (r.res.ok && r.data && r.data.success) {
+            SGM.toast(r.data.message);
+            carregarLista();
+        } else {
+            SGM.toast(r.data ? r.data.message : 'Erro ao excluir', 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        modal = new bootstrap.Modal(document.getElementById('modalAmbiente'));
+        carregarBlocos();
+        carregarLista();
     });
 })();

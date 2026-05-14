@@ -20,7 +20,7 @@ $senha = trim($data->senha);
 // Busca o usuário
 $sql = "SELECT id_usuario, nome, email, senha_hash, perfil, ativo 
         FROM usuarios 
-        WHERE email = '$email' 
+        WHERE email = '$email' AND deleted_at IS NULL 
         LIMIT 1";
 
 $result = $conn->query($sql);

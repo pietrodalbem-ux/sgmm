@@ -5,89 +5,79 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_perfil'] !== 'gestor' && $_
     exit;
 }
 $PAGE_TITLE = 'Blocos';
-$PAGE_SUBTITLE = 'Cadastro de setores físicos vinculados aos ambientes.';
+$PAGE_SUBTITLE = 'Gerencie os setores físicos da unidade para organização dos ambientes.';
 $LAYOUT = 'gestor';
 $NAV_ACTIVE = 'blocos';
 $SGM_EXTRA_SCRIPTS = ['assets/js/gestor-blocos.js'];
 require_once __DIR__ . '/includes/app_layout_start.php';
 ?>
 
-<div id="painelEdicao" class="sgm-card mb-4 d-none border-primary">
-    <div class="sgm-card-header bg-primary text-white">
-        <span>Editar Bloco</span>
-        <button type="button" class="btn btn-sm btn-close btn-close-white" id="btnFecharEdicao"></button>
-    </div>
-    <div class="sgm-card-pad">
-        <div class="row g-4">
-            <div class="col-md-5">
-                <label class="form-label small fw-bold text-muted text-uppercase" for="edit_bloco_nome">Nome do Bloco</label>
-                <input type="text" class="form-control sgm-control" id="edit_bloco_nome" maxlength="120">
-            </div>
-            <div class="col-md-7">
-                <label class="form-label small fw-bold text-muted text-uppercase" for="edit_bloco_desc">Descrição / Observações</label>
-                <input type="text" class="form-control sgm-control" id="edit_bloco_desc" maxlength="255">
-            </div>
-            <div class="col-12">
-                <button type="button" class="btn sgm-btn-primary px-4" id="btnSalvarEdicaoBloco">
-                    <i class="bi bi-check2-circle me-2"></i>Salvar Alterações
-                </button>
-            </div>
+<div class="sgm-card animate__animated animate__fadeIn">
+    <div class="sgm-card-header">
+        <div class="d-flex align-items-center gap-3">
+            <span><i class="bi bi-box-seam me-2 text-primary"></i>Blocos Cadastrados</span>
+            <span class="badge bg-light text-primary rounded-pill" id="blocos-contagem">0</span>
         </div>
+        <div class="ms-auto d-flex gap-2">
+            <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-light border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control bg-light border-0" id="busca-blocos" placeholder="Filtrar blocos...">
+            </div>
+            <button type="button" class="btn sgm-btn-primary btn-sm rounded-pill px-4" id="btnAbrirModalNovo">
+                <i class="bi bi-plus-lg me-2"></i>Adicionar Bloco
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table sgm-table align-middle">
+            <thead>
+                <tr>
+                    <th>Nome do Bloco</th>
+                    <th>Descrição / Observações</th>
+                    <th class="text-end actions-column">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="lista-blocos-corpo">
+                <tr>
+                    <td colspan="3" class="text-center py-5">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        <span class="text-muted fw-medium">Sincronizando banco de dados...</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-4">
-        <div class="sgm-card h-100">
-            <div class="sgm-card-header">
-                <span>Novo Bloco</span>
+<!-- Modal de Cadastro/Edição -->
+<div class="modal fade" id="modalBloco" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="modalTitle">Novo Bloco</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="sgm-card-pad">
-                <form id="formNovoBloco">
+            <form id="formBloco">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="bloco_id">
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted text-uppercase" for="bloco_nome">Nome</label>
-                        <input type="text" class="form-control sgm-control" id="bloco_nome" required placeholder="Ex.: Bloco A">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="bloco_nome">Nome do Bloco</label>
+                        <input type="text" class="form-control sgm-control" id="bloco_nome" required placeholder="Ex.: Bloco A, Oficinas, etc.">
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-0">
                         <label class="form-label small fw-bold text-muted text-uppercase" for="bloco_descricao">Descrição</label>
-                        <textarea class="form-control sgm-control" id="bloco_descricao" rows="3" placeholder="Opcional"></textarea>
+                        <textarea class="form-control sgm-control" id="bloco_descricao" rows="3" placeholder="Opcional: detalhes sobre a localização ou uso do bloco."></textarea>
                     </div>
-                    <button type="submit" class="btn sgm-btn-primary w-100 py-3">
-                        <i class="bi bi-plus-lg me-2"></i>Adicionar Bloco
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn sgm-btn-primary rounded-pill px-4">
+                        <i class="bi bi-check2-circle me-2"></i>Salvar Bloco
                     </button>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-8">
-        <div class="sgm-card h-100">
-            <div class="sgm-card-header">
-                <span>Blocos Cadastrados</span>
-                <span class="badge bg-light text-primary rounded-pill" id="blocos-contagem">0</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table sgm-table align-middle">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Descrição</th>
-                            <th class="text-end" style="width:120px">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-blocos-corpo">
-                        <tr>
-                            <td colspan="3" class="text-center py-5 text-muted">
-                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                                Carregando dados...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>
