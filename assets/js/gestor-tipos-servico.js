@@ -94,7 +94,7 @@
     });
 
     async function confirmarExclusao(id) {
-        if (!confirm('Tem certeza que deseja excluir esta categoria? Chamados vinculados podem ser afetados.')) return;
+        if (!confirm('Deseja realmente mover esta categoria para a lixeira?')) return;
         var r = await SGM.fetchJson(API, 'DELETE', { id_tipo_servico: id });
         if (r.res.ok && r.data && r.data.success) {
             SGM.toast(r.data.message);

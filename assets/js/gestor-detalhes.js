@@ -20,23 +20,25 @@
         try {
             var select = document.getElementById('selectTecnico');
             if (isGestor && select) {
-                var resTec = await fetch('api/usuarios.php');
-                if (!resTec.ok) throw new Error('Erro ao carregar técnicos.');
-                var tecnicos = await resTec.json();
-                if (Array.isArray(tecnicos)) {
-                    tecnicos.forEach(function (t) {
-                        var option = document.createElement('option');
-                        option.value = t.id_usuario;
-                        option.textContent = t.nome;
-                        select.appendChild(option);
-                    });
+                var rTec = await SGM.fetchJson('api/usuarios.php?perfil=tecnico');
+                if (rTec.res.ok && rTec.data && rTec.data.success) {
+                    var tecnicos = rTec.data.data;
+                    if (Array.isArray(tecnicos)) {
+                        tecnicos.forEach(function (t) {
+                            var option = document.createElement('option');
+                            option.value = t.id_usuario;
+                            option.textContent = t.nome;
+                            select.appendChild(option);
+                        });
+                    }
                 }
             }
 
-            var resChamado = await fetch('api/chamado.php?id=' + encodeURIComponent(chamadoId));
-            if (!resChamado.ok) throw new Error('Chamado não encontrado.');
-            var c = await resChamado.json();
+            var rChamado = await SGM.fetchJson('api/chamado.php?id=' + encodeURIComponent(chamadoId));
+            if (!rChamado.res.ok) throw new Error('Chamado não encontrado.');
+            var c = rChamado.data;
             if (!c || c.error) throw new Error(c.error || 'Chamado não encontrado');
+            if (c.data) c = c.data;
 
             document.getElementById('detalhesChamado').innerHTML =
                 '<p class="mb-2"><strong>Status:</strong> ' +
@@ -69,31 +71,31 @@
                 var pr = document.getElementById('prioridade');
                 if (pr && c.prioridade) pr.value = c.prioridade;
                 var dt = document.getElementById('data_prevista');
-                if (dt && c.data_previsao_conclusao) dt.value = c.data_previsao_conclusao;
+                if (dt && c.data_previsao_conclusao) {
+                    var d = c.data_previsao_conclusao.replace(' ', 'T');
+                    dt.value = d.length > 16 ? d.substring(0, 16) : d;
+                }
             }
 
-            var resAnexos = await fetch('api/anexos.php?id_chamado=' + encodeURIComponent(chamadoId));
-            if (resAnexos.ok) {
-                var anexos = await resAnexos.json();
-                if (Array.isArray(anexos) && anexos.length > 0) {
-                    var html =
-                        '<hr class="my-3"><h6 class="fw-semibold mb-2">Evidências</h6><div class="row g-2">';
-                    anexos.forEach(function (arq) {
-                        var pathJs = JSON.stringify(arq.caminho_arquivo);
-                        var pathUrl = encodeURI(arq.caminho_arquivo);
-                        html +=
-                            '<div class="col-6 col-md-3 text-center">' +
-                            '<img src="' +
-                            pathUrl +
-                            '" class="img-fluid rounded border" style="cursor:pointer;height:100px;width:100%;object-fit:cover;" onclick="verFoto(' +
-                            pathJs +
-                            ')" alt="">' +
-                            '<small class="text-muted d-block mt-1" style="font-size:0.7rem">' +
-                            (arq.tipo_anexo === 'abertura' ? 'Abertura' : 'Conclusão') +
-                            '</small></div>';
-                    });
-                    document.getElementById('fotosContainer').innerHTML = html + '</div>';
-                }
+            var rAnexos = await SGM.fetchJson('api/anexos.php?id_chamado=' + encodeURIComponent(chamadoId));
+            if (rAnexos.res.ok && Array.isArray(rAnexos.data) && rAnexos.data.length > 0) {
+                var html =
+                    '<hr class="my-3"><h6 class="fw-semibold mb-2">Evidências</h6><div class="row g-2">';
+                rAnexos.data.forEach(function (arq) {
+                    var pathJs = JSON.stringify(arq.caminho_arquivo);
+                    var pathUrl = encodeURI(arq.caminho_arquivo);
+                    html +=
+                        '<div class="col-6 col-md-3 text-center">' +
+                        '<img src="' +
+                        pathUrl +
+                        '" class="img-fluid rounded border" style="cursor:pointer;height:100px;width:100%;object-fit:cover;" onclick="verFoto(' +
+                        pathJs +
+                        ')" alt="">' +
+                        '<small class="text-muted d-block mt-1" style="font-size:0.7rem">' +
+                        (arq.tipo_anexo === 'abertura' ? 'Abertura' : 'Conclusão') +
+                        '</small></div>';
+                });
+                document.getElementById('fotosContainer').innerHTML = html + '</div>';
             }
         } catch (erro) {
             console.error(erro);
@@ -118,6 +120,7 @@
                 var res = await fetch('api/atribuir_chamado.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify(dados),
                 });
                 var retorno = await res.json();

@@ -2,7 +2,7 @@
 // update_passwords.php – Atualiza a senha de todos os usuários para '123'
 // Executar acessando http://localhost/2025/projetos_senai/sgm-g/update_passwords.php
 
-require_once '../config/database.php';
+require_once __DIR__ . '/config/database.php';
 
 // Gerar novo hash (bcrypt) para a senha '123'
 $newHash = password_hash('123', PASSWORD_BCRYPT);

@@ -3,8 +3,8 @@ session_start();
 require_once '../config/database.php';
 header('Content-Type: application/json');
 
-// Proteção: Apenas Administradores têm acesso total à lixeira
-if (!isset($_SESSION['user_id']) || $_SESSION['user_perfil'] !== 'admin') {
+// Proteção: Apenas Gestores e Administradores têm acesso à lixeira
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_perfil'] !== 'gestor' && $_SESSION['user_perfil'] !== 'admin')) {
     echo json_encode(["success" => false, "message" => "Acesso restrito a administradores."]);
     exit;
 }

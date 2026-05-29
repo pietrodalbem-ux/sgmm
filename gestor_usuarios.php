@@ -33,7 +33,6 @@ require_once __DIR__ . '/includes/app_layout_start.php';
             <thead>
                 <tr>
                     <th>Usuário</th>
-                    <th>Documento</th>
                     <th>Perfil / Acesso</th>
                     <th>Departamento</th>
                     <th>Status</th>
@@ -42,7 +41,7 @@ require_once __DIR__ . '/includes/app_layout_start.php';
             </thead>
             <tbody id="lista-usuarios-corpo">
                 <tr>
-                    <td colspan="6" class="text-center py-5">
+                    <td colspan="5" class="text-center py-5">
                         <div class="spinner-border text-primary spinner-border-sm me-2"></div>
                         <span class="text-muted fw-medium">Sincronizando banco de dados...</span>
                     </td>
@@ -86,14 +85,6 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                             <select class="form-select sgm-control" id="user_departamento">
                                 <option value="">Nenhum / Geral</option>
                             </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase" for="user_cpf">CPF (Opcional)</label>
-                            <input type="text" class="form-control sgm-control" id="user_cpf" placeholder="000.000.000-00">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase" for="user_tel">Telefone (Opcional)</label>
-                            <input type="text" class="form-control sgm-control" id="user_tel" placeholder="(00) 00000-0000">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase" for="user_senha">Senha <span id="pass-hint" class="d-none text-lowercase">(deixe em branco para manter)</span></label>

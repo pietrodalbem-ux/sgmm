@@ -16,6 +16,7 @@ switch ($method) {
     case "GET":
         $acao = $_GET['acao'] ?? '';
         $busca = isset($_GET['q']) ? $conn->real_escape_string($_GET['q']) : '';
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
         if ($acao === 'listar_departamentos') {
             $sql = "SELECT id_departamento, nome FROM departamentos WHERE deleted_at IS NULL ORDER BY nome ASC";
@@ -24,9 +25,17 @@ switch ($method) {
             break;
         }
 
-        $where = "WHERE u.deleted_at IS NULL";
-        if ($busca) {
-            $where .= " AND (u.nome LIKE '%$busca%' OR u.email LIKE '%$busca%' OR u.cpf LIKE '%$busca%' OR d.nome LIKE '%$busca%')";
+        if ($id > 0) {
+            $where = "WHERE u.id_usuario = $id AND u.deleted_at IS NULL";
+        } else {
+            $where = "WHERE u.deleted_at IS NULL";
+            if ($busca) {
+                $where .= " AND (u.nome LIKE '%$busca%' OR u.email LIKE '%$busca%' OR u.cpf LIKE '%$busca%' OR d.nome LIKE '%$busca%')";
+            }
+            $perfilFiltro = isset($_GET['perfil']) ? $conn->real_escape_string($_GET['perfil']) : '';
+            if ($perfilFiltro) {
+                $where .= " AND u.perfil = '$perfilFiltro'";
+            }
         }
 
         $sql = "SELECT u.id_usuario, u.nome, u.email, u.cpf, u.telefone, u.perfil, u.ativo, u.id_departamento, d.nome as departamento_nome 
@@ -74,38 +83,58 @@ switch ($method) {
 
     case "PUT":
         $data = json_decode(file_get_contents("php://input"));
-        if (empty($data->id_usuario) || empty($data->nome) || empty($data->email) || empty($data->perfil)) {
-            echo json_encode(["success" => false, "message" => "Dados incompletos."]);
+        if (empty($data->id_usuario)) {
+            echo json_encode(["success" => false, "message" => "ID não informado."]);
             exit;
         }
 
         $id = (int)$data->id_usuario;
-        $nome = $conn->real_escape_string(trim($data->nome));
-        $email = $conn->real_escape_string(trim($data->email));
-        $cpf = !empty($data->cpf) ? $conn->real_escape_string(trim($data->cpf)) : null;
-        $telefone = !empty($data->telefone) ? $conn->real_escape_string(trim($data->telefone)) : null;
-        $perfil = $conn->real_escape_string($data->perfil);
-        $id_dept = !empty($data->id_departamento) ? (int)$data->id_departamento : 'NULL';
-        $ativo = isset($data->ativo) ? (int)$data->ativo : 1;
+        $sets = [];
 
-        // Validar duplicidade de email
-        $check = $conn->query("SELECT id_usuario FROM usuarios WHERE email = '$email' AND id_usuario != $id");
-        if ($check->num_rows > 0) {
-            echo json_encode(["success" => false, "message" => "Este e-mail já pertence a outro usuário."]);
+        if (!empty($data->nome)) {
+            $nome = $conn->real_escape_string(trim($data->nome));
+            $sets[] = "nome = '$nome'";
+        }
+        if (!empty($data->email)) {
+            $email = $conn->real_escape_string(trim($data->email));
+            $check = $conn->query("SELECT id_usuario FROM usuarios WHERE email = '$email' AND id_usuario != $id");
+            if ($check->num_rows > 0) {
+                echo json_encode(["success" => false, "message" => "Este e-mail já pertence a outro usuário."]);
+                exit;
+            }
+            $sets[] = "email = '$email'";
+        }
+        if (isset($data->cpf)) {
+            $cpf = !empty($data->cpf) ? "'" . $conn->real_escape_string(trim($data->cpf)) . "'" : "NULL";
+            $sets[] = "cpf = $cpf";
+        }
+        if (isset($data->telefone)) {
+            $telefone = !empty($data->telefone) ? "'" . $conn->real_escape_string(trim($data->telefone)) . "'" : "NULL";
+            $sets[] = "telefone = $telefone";
+        }
+        if (!empty($data->perfil)) {
+            $perfil = $conn->real_escape_string($data->perfil);
+            $sets[] = "perfil = '$perfil'";
+        }
+        if (isset($data->id_departamento)) {
+            $id_dept = !empty($data->id_departamento) ? (int)$data->id_departamento : 'NULL';
+            $sets[] = "id_departamento = $id_dept";
+        }
+        if (isset($data->ativo)) {
+            $ativo = (int)$data->ativo;
+            $sets[] = "ativo = $ativo";
+        }
+        if (!empty($data->senha)) {
+            $senha_hash = password_hash($data->senha, PASSWORD_DEFAULT);
+            $sets[] = "senha_hash = '$senha_hash'";
+        }
+
+        if (empty($sets)) {
+            echo json_encode(["success" => false, "message" => "Nenhum campo para atualizar."]);
             exit;
         }
 
-        $sql = "UPDATE usuarios SET 
-                nome = '$nome', email = '$email', cpf = " . ($cpf ? "'$cpf'" : "NULL") . ", 
-                telefone = " . ($telefone ? "'$telefone'" : "NULL") . ", perfil = '$perfil', 
-                id_departamento = $id_dept, ativo = $ativo";
-        
-        if (!empty($data->senha)) {
-            $senha_hash = password_hash($data->senha, PASSWORD_DEFAULT);
-            $sql .= ", senha_hash = '$senha_hash'";
-        }
-
-        $sql .= " WHERE id_usuario = $id AND deleted_at IS NULL";
+        $sql = "UPDATE usuarios SET " . implode(', ', $sets) . " WHERE id_usuario = $id AND deleted_at IS NULL";
 
         if ($conn->query($sql)) {
             echo json_encode(["success" => true, "message" => "Dados atualizados com sucesso."]);

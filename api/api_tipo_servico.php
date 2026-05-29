@@ -13,7 +13,15 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 switch ($method) {
     case "GET":
-        $sql = "SELECT id_tipo_servico, nome, descricao FROM tipo_servico WHERE deleted_at IS NULL ORDER BY nome ASC";
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $busca = isset($_GET['q']) ? $conn->real_escape_string($_GET['q']) : '';
+        $where = "WHERE deleted_at IS NULL";
+        if ($id > 0) {
+            $where .= " AND id_tipo_servico = $id";
+        } elseif ($busca) {
+            $where .= " AND (nome LIKE '%$busca%' OR descricao LIKE '%$busca%')";
+        }
+        $sql = "SELECT id_tipo_servico, nome, descricao FROM tipo_servico $where ORDER BY nome ASC";
         $result = $conn->query($sql);
         echo json_encode([
             "success" => true,
@@ -40,15 +48,28 @@ switch ($method) {
 
     case "PUT":
         $data = json_decode(file_get_contents("php://input"));
-        if (empty($data->id_tipo_servico) || empty($data->nome)) {
-            echo json_encode(["success" => false, "message" => "Dados incompletos."]);
+        if (empty($data->id_tipo_servico)) {
+            echo json_encode(["success" => false, "message" => "ID não informado."]);
             exit;
         }
         $id = (int)$data->id_tipo_servico;
-        $nome = $conn->real_escape_string(trim($data->nome));
-        $desc = $conn->real_escape_string(trim($data->descricao ?? ''));
+        $sets = [];
 
-        $sql = "UPDATE tipo_servico SET nome = '$nome', descricao = '$desc' WHERE id_tipo_servico = $id AND deleted_at IS NULL";
+        if (!empty($data->nome)) {
+            $nome = $conn->real_escape_string(trim($data->nome));
+            $sets[] = "nome = '$nome'";
+        }
+        if (isset($data->descricao)) {
+            $desc = $conn->real_escape_string(trim($data->descricao));
+            $sets[] = "descricao = '$desc'";
+        }
+
+        if (empty($sets)) {
+            echo json_encode(["success" => false, "message" => "Nenhum campo para atualizar."]);
+            exit;
+        }
+
+        $sql = "UPDATE tipo_servico SET " . implode(', ', $sets) . " WHERE id_tipo_servico = $id AND deleted_at IS NULL";
         if ($conn->query($sql)) {
             echo json_encode(["success" => true, "message" => "Tipo de serviço atualizado."]);
         } else {

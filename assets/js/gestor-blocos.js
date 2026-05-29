@@ -58,7 +58,7 @@
         if (id) {
             document.getElementById('modalTitle').textContent = 'Editar Bloco';
             // Consulta real ao banco para preencher o formulário
-            SGM.fetchJson(API + '?q=' + id).then(r => {
+            SGM.fetchJson(API + '?id=' + id).then(r => {
                 if(r.data && r.data.data && r.data.data.length) {
                     var b = r.data.data[0];
                     document.getElementById('bloco_nome').value = b.nome;

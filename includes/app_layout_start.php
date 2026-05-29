@@ -34,7 +34,7 @@ $navGestor = [
     ['key' => 'tipos', 'label' => 'Tipos de serviço', 'href' => 'gestor_tipos_servico.php', 'icon' => 'bi-tags'],
 ];
 
-if ($rawPerfil === 'admin') {
+if ($rawPerfil === 'admin' || $rawPerfil === 'gestor') {
     $navGestor[] = ['key' => 'lixeira', 'label' => 'Lixeira', 'href' => 'gestor_lixeira.php', 'icon' => 'bi-trash3'];
 }
 

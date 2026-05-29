@@ -17,13 +17,13 @@
             var url = API + '?q=' + encodeURIComponent(q);
 
             // Feedback visual de consulta real ao banco
-            tbody().innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Buscando no banco de dados...</td></tr>';
+            tbody().innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Buscando no banco de dados...</td></tr>';
 
             var r = await SGM.fetchJson(url, 'GET');
             
             if (!r.res.ok || !r.data || !r.data.success) {
                 var errorMsg = r.data && r.data.message ? r.data.message : 'Erro ao sincronizar dados com o servidor.';
-                tbody().innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-2"></i>' + SGM.escapeHtml(errorMsg) + '</td></tr>';
+                tbody().innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-2"></i>' + SGM.escapeHtml(errorMsg) + '</td></tr>';
                 return;
             }
             
@@ -32,7 +32,7 @@
             if (countEl) countEl.textContent = list.length;
             
             if (!list.length) {
-                tbody().innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Nenhum usuário encontrado para esta busca.</td></tr>';
+                tbody().innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhum usuário encontrado para esta busca.</td></tr>';
                 return;
             }
 
@@ -47,7 +47,6 @@
                             <div class="fw-bold text-dark">${SGM.escapeHtml(u.nome)}</div>
                             <div class="small text-muted">${SGM.escapeHtml(u.email)}</div>
                         </td>
-                        <td><span class="small text-muted">${SGM.escapeHtml(u.cpf || '—')}</span></td>
                         <td><span class="badge bg-light text-primary border rounded-pill px-3">${SGM.escapeHtml(u.perfil.toUpperCase())}</span></td>
                         <td><div class="small fw-medium">${SGM.escapeHtml(u.departamento_nome || '—')}</div></td>
                         <td>${badgeAtivo}</td>
@@ -62,7 +61,7 @@
             }).join('');
         } catch (err) {
             console.error('Erro na listagem de usuários:', err);
-            tbody().innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Falha crítica na conexão com o sistema.</td></tr>';
+            tbody().innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Falha crítica na conexão com o sistema.</td></tr>';
         }
     }
 
@@ -101,13 +100,11 @@
         
         if (id) {
             document.getElementById('modalTitle').textContent = 'Editar Usuário';
-            SGM.fetchJson(API + '?q=' + id, 'GET').then(r => {
+            SGM.fetchJson(API + '?id=' + id, 'GET').then(r => {
                 if(r.data && r.data.data && r.data.data.length) {
                     var u = r.data.data[0];
                     document.getElementById('user_nome').value = u.nome;
                     document.getElementById('user_email').value = u.email;
-                    document.getElementById('user_cpf').value = u.cpf || '';
-                    document.getElementById('user_tel').value = u.telefone || '';
                     document.getElementById('user_perfil').value = u.perfil;
                     document.getElementById('user_departamento').value = u.id_departamento || '';
                     document.getElementById('user_ativo').value = u.ativo;
@@ -140,8 +137,6 @@
                     id_usuario: editId,
                     nome: document.getElementById('user_nome').value.trim(),
                     email: document.getElementById('user_email').value.trim(),
-                    cpf: document.getElementById('user_cpf').value.trim(),
-                    telefone: document.getElementById('user_tel').value.trim(),
                     perfil: document.getElementById('user_perfil').value,
                     id_departamento: document.getElementById('user_departamento').value,
                     ativo: document.getElementById('user_ativo').value,

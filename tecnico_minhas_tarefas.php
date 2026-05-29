@@ -72,5 +72,30 @@ require_once __DIR__ . '/includes/app_layout_start.php';
     </div>
 </div>
 
+<!-- Modal Concluir Chamado -->
+<div class="modal fade" id="modalConcluir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check2-circle me-2"></i>Concluir Chamado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1 fw-semibold" id="concluirTitulo"></p>
+                <p class="text-muted small mb-3" id="concluirDesc"></p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Observação de conclusão</label>
+                    <textarea id="concluirFeedback" class="form-control sgm-control" rows="3" placeholder="Descreva o que foi feito..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" id="btnConfirmarConcluir">
+                    <i class="bi bi-check-lg me-1"></i> Confirmar Conclusão
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/includes/app_layout_end.php'; ?>

@@ -15,8 +15,11 @@ $method = $_SERVER["REQUEST_METHOD"];
 switch ($method) {
     case "GET":
         $busca = isset($_GET['q']) ? $conn->real_escape_string($_GET['q']) : '';
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $where = "WHERE deleted_at IS NULL";
-        if ($busca) {
+        if ($id > 0) {
+            $where .= " AND id_bloco = $id";
+        } elseif ($busca) {
             $where .= " AND (nome LIKE '%$busca%' OR descricao LIKE '%$busca%')";
         }
         $sql = "SELECT id_bloco, nome, descricao FROM blocos $where ORDER BY nome ASC";
@@ -46,15 +49,28 @@ switch ($method) {
     
     case "PUT":
         $data = json_decode(file_get_contents("php://input"));
-        if (empty($data->id_bloco) || empty($data->nome)) {
-            echo json_encode(["success" => false, "message" => "Dados incompletos."]);
+        if (empty($data->id_bloco)) {
+            echo json_encode(["success" => false, "message" => "ID não informado."]);
             exit;
         }
         $id = (int)$data->id_bloco;
-        $nome = $conn->real_escape_string(trim($data->nome));
-        $descricao = $conn->real_escape_string(trim($data->descricao ?? ''));
+        $sets = [];
 
-        $sql = "UPDATE blocos SET nome = '$nome', descricao = '$descricao' WHERE id_bloco = $id AND deleted_at IS NULL";
+        if (!empty($data->nome)) {
+            $nome = $conn->real_escape_string(trim($data->nome));
+            $sets[] = "nome = '$nome'";
+        }
+        if (isset($data->descricao)) {
+            $descricao = $conn->real_escape_string(trim($data->descricao));
+            $sets[] = "descricao = '$descricao'";
+        }
+
+        if (empty($sets)) {
+            echo json_encode(["success" => false, "message" => "Nenhum campo para atualizar."]);
+            exit;
+        }
+
+        $sql = "UPDATE blocos SET " . implode(', ', $sets) . " WHERE id_bloco = $id AND deleted_at IS NULL";
         if ($conn->query($sql)) {
             echo json_encode(["success" => true, "message" => "Bloco atualizado com sucesso."]);
         } else {

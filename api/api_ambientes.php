@@ -14,8 +14,11 @@ $method = $_SERVER["REQUEST_METHOD"];
 switch ($method) {
     case "GET":
         $busca = isset($_GET['q']) ? $conn->real_escape_string($_GET['q']) : '';
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $where = "WHERE a.deleted_at IS NULL AND b.deleted_at IS NULL";
-        if ($busca) {
+        if ($id > 0) {
+            $where .= " AND a.id_ambiente = $id";
+        } elseif ($busca) {
             $where .= " AND (a.nome LIKE '%$busca%' OR b.nome LIKE '%$busca%')";
         }
         $sql = "SELECT a.id_ambiente, a.nome, a.id_bloco, b.nome as bloco_nome 
@@ -49,15 +52,28 @@ switch ($method) {
 
     case "PUT":
         $data = json_decode(file_get_contents("php://input"));
-        if (empty($data->id_ambiente) || empty($data->nome)) {
-            echo json_encode(["success" => false, "message" => "Dados incompletos."]);
+        if (empty($data->id_ambiente)) {
+            echo json_encode(["success" => false, "message" => "ID não informado."]);
             exit;
         }
         $id = (int)$data->id_ambiente;
-        $id_bloco = (int)$data->id_bloco;
-        $nome = $conn->real_escape_string(trim($data->nome));
+        $sets = [];
 
-        $sql = "UPDATE ambientes SET nome = '$nome', id_bloco = $id_bloco WHERE id_ambiente = $id AND deleted_at IS NULL";
+        if (!empty($data->nome)) {
+            $nome = $conn->real_escape_string(trim($data->nome));
+            $sets[] = "nome = '$nome'";
+        }
+        if (!empty($data->id_bloco)) {
+            $id_bloco = (int)$data->id_bloco;
+            $sets[] = "id_bloco = $id_bloco";
+        }
+
+        if (empty($sets)) {
+            echo json_encode(["success" => false, "message" => "Nenhum campo para atualizar."]);
+            exit;
+        }
+
+        $sql = "UPDATE ambientes SET " . implode(', ', $sets) . " WHERE id_ambiente = $id AND deleted_at IS NULL";
         if ($conn->query($sql)) {
             echo json_encode(["success" => true, "message" => "Ambiente atualizado."]);
         } else {

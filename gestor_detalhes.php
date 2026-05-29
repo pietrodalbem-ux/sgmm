@@ -70,8 +70,8 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted text-uppercase" for="data_prevista">Previsão de Conclusão</label>
-                        <input type="date" id="data_prevista" class="form-control sgm-control">
+                        <label class="form-label small fw-bold text-muted text-uppercase" for="data_prevista">Prazo de Conclusão</label>
+                        <input type="datetime-local" id="data_prevista" class="form-control sgm-control">
                     </div>
                     <button type="submit" class="btn sgm-btn-primary w-100 py-3 rounded-pill fw-bold">
                         Atualizar Gestão <i class="bi bi-save2 ms-2"></i>
