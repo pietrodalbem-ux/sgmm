@@ -183,7 +183,10 @@
         carregarDashboard();
         carregarRecentemente();
         
-        // Atualização automática a cada 30 segundos
-        setInterval(carregarDashboard, 30000);
+        // Atualização automática silenciosa a cada 2 minutos
+        setInterval(function() {
+            carregarDashboard();
+            carregarRecentemente();
+        }, 120000);
     });
 })();

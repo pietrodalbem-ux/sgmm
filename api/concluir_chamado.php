@@ -23,15 +23,34 @@ try {
         exit;
     }
 
-    $data = json_decode(file_get_contents('php://input'), true);
-    if (!$data || empty($data['id_chamado'])) {
+    $uid = (int) $_SESSION['user_id'];
+    $perfil = $_SESSION['user_perfil'] ?? '';
+
+    // Determine if request is JSON or FormData
+    $isJson = strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
+    
+    if ($isJson) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id_chamado = (int) ($data['id_chamado'] ?? 0);
+        $feedback = isset($data['feedback']) ? $conn->real_escape_string(trim($data['feedback'])) : '';
+        $data_conclusao = ''; // Will use NOW()
+        $has_photo = false;
+    } else {
+        $id_chamado = (int) ($_POST['id_chamado'] ?? 0);
+        $feedback = isset($_POST['feedback']) ? $conn->real_escape_string(trim($_POST['feedback'])) : '';
+        $data_conclusao = isset($_POST['data_conclusao']) ? $conn->real_escape_string(trim($_POST['data_conclusao'])) : '';
+        $has_photo = isset($_FILES['foto_conclusao']) && $_FILES['foto_conclusao']['error'] === UPLOAD_ERR_OK;
+        
+        if ($perfil === 'tecnico' && (!$data_conclusao || !$has_photo)) {
+            echo json_encode(["success" => false, "message" => "Data de conclusão e foto de evidência são obrigatórias."]);
+            exit;
+        }
+    }
+
+    if (!$id_chamado) {
         echo json_encode(["success" => false, "message" => "Dados incompletos."]);
         exit;
     }
-
-    $id_chamado = (int) $data['id_chamado'];
-    $uid = (int) $_SESSION['user_id'];
-    $perfil = $_SESSION['user_perfil'] ?? '';
 
     // Verificar permissão: técnico designado, gestor ou admin
     if ($perfil === 'tecnico') {
@@ -50,15 +69,28 @@ try {
         exit;
     }
 
-    $feedback = isset($data['feedback']) ? $conn->real_escape_string(trim($data['feedback'])) : '';
-
+    $dateSql = $data_conclusao ? "'$data_conclusao'" : "NOW()";
     $sql = "UPDATE chamados SET
                 status = 'concluido',
-                data_conclusao = NOW(),
+                data_conclusao = $dateSql,
                 feedback_solicitante = " . ($feedback ? "'$feedback'" : "feedback_solicitante") . "
             WHERE id_chamado = $id_chamado AND deleted_at IS NULL";
 
     if ($conn->query($sql)) {
+        if (!$isJson && $has_photo) {
+        $diretorio = "../assets/uploads/";
+        if(!is_dir($diretorio)) mkdir($diretorio, 0777, true);
+        
+        $extensao = strtolower(pathinfo($_FILES['foto_conclusao']['name'], PATHINFO_EXTENSION));
+        $nome_arquivo = "conclusao_" . uniqid() . "." . $extensao;
+        $caminho_final = $diretorio . $nome_arquivo;
+        
+        if(move_uploaded_file($_FILES['foto_conclusao']['tmp_name'], $caminho_final)){
+            $caminho_db = "assets/uploads/" . $nome_arquivo;
+            $conn->query("INSERT INTO chamados_anexos (id_chamado, caminho_arquivo, tipo_anexo) VALUES ($id_chamado, '$caminho_db', 'conclusao')");
+        }
+        }
+        
         echo json_encode(["success" => true, "message" => "Chamado #$id_chamado concluído com sucesso!"]);
     } else {
         echo json_encode(["success" => false, "message" => "Erro ao concluir: " . $conn->error]);

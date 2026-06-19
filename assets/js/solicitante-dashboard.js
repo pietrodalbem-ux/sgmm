@@ -49,5 +49,8 @@
         }).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', carregar);
+    document.addEventListener('DOMContentLoaded', function() {
+        carregar();
+        setInterval(carregar, 120000);
+    });
 })();

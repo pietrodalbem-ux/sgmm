@@ -61,14 +61,7 @@ require_once __DIR__ . '/includes/app_layout_start.php';
             </div>
         </div>
         
-        <div class="sgm-card bg-primary text-white border-0 overflow-hidden position-relative">
-            <div class="sgm-card-pad position-relative z-1">
-                <h3 class="h6 fw-800 text-uppercase mb-3 tracking-widest opacity-75">Suporte</h3>
-                <p class="small mb-4 opacity-75">Problemas com o sistema ou dúvidas sobre um chamado? Entre em contato com a gestão.</p>
-                <a href="#" class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-primary">Falar com Gestor</a>
-            </div>
-            <i class="bi bi-chat-dots position-absolute end-0 bottom-0 m-n2 opacity-10" style="font-size: 5rem;"></i>
-        </div>
+
     </div>
 </div>
 
@@ -84,7 +77,15 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                 <p class="mb-1 fw-semibold" id="concluirTitulo"></p>
                 <p class="text-muted small mb-3" id="concluirDesc"></p>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Observação de conclusão</label>
+                    <label class="form-label small fw-bold text-muted text-uppercase" for="concluirData">Data e Hora da Conclusão <span class="text-danger">*</span></label>
+                    <input type="datetime-local" id="concluirData" class="form-control sgm-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase" for="concluirFoto">Evidência (Foto) <span class="text-danger">*</span></label>
+                    <input type="file" id="concluirFoto" class="form-control sgm-control" accept="image/*" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase" for="concluirFeedback">Observação de conclusão</label>
                     <textarea id="concluirFeedback" class="form-control sgm-control" rows="3" placeholder="Descreva o que foi feito..."></textarea>
                 </div>
             </div>

@@ -75,6 +75,24 @@
                     var d = c.data_previsao_conclusao.replace(' ', 'T');
                     dt.value = d.length > 16 ? d.substring(0, 16) : d;
                 }
+
+                var btnFechar = document.getElementById('btnFecharOS');
+                if (btnFechar) {
+                    if (c.status !== 'concluido' && c.status !== 'cancelado') {
+                        btnFechar.style.display = 'block';
+                    } else {
+                        btnFechar.style.display = 'none';
+                    }
+                }
+            } else {
+                var cardTecnico = document.getElementById('cardFecharOSTecnico');
+                if (cardTecnico) {
+                    if (c.status !== 'concluido' && c.status !== 'cancelado') {
+                        cardTecnico.style.display = 'block';
+                    } else {
+                        cardTecnico.style.display = 'none';
+                    }
+                }
             }
 
             var rAnexos = await SGM.fetchJson('api/anexos.php?id_chamado=' + encodeURIComponent(chamadoId));
@@ -129,6 +147,60 @@
                     window.location.href = isGestor ? 'gestor_chamados.php' : 'tecnico_minhas_tarefas.php';
                 } else {
                     SGM.toast(retorno.message || 'Falha ao salvar.', 'error');
+                }
+            } catch (err) {
+                SGM.toast('Erro de conexão: ' + err.message, 'error');
+            }
+        });
+    }
+
+    var btnFecharTecnico = document.getElementById('btnFecharOSTecnico');
+    if (btnFecharTecnico) {
+        btnFecharTecnico.addEventListener('click', async function () {
+            if (!confirm('Tem certeza que deseja encerrar esta OS?')) return;
+            
+            try {
+                var res = await fetch('api/concluir_chamado.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ id_chamado: chamadoId, feedback: 'Encerrado pelo técnico' }),
+                });
+                var retorno = await res.json();
+                if (retorno.success) {
+                    SGM.toast(retorno.message || 'OS encerrada com sucesso.');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    SGM.toast(retorno.message || 'Falha ao encerrar OS.', 'error');
+                }
+            } catch (err) {
+                SGM.toast('Erro de conexão: ' + err.message, 'error');
+            }
+        });
+    }
+
+    var btnFechar = document.getElementById('btnFecharOS');
+    if (btnFechar) {
+        btnFechar.addEventListener('click', async function () {
+            if (!confirm('Tem certeza que deseja encerrar esta OS?')) return;
+            
+            try {
+                var res = await fetch('api/concluir_chamado.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ id_chamado: chamadoId, feedback: 'Encerrado pelo gestor' }),
+                });
+                var retorno = await res.json();
+                if (retorno.success) {
+                    SGM.toast(retorno.message || 'OS encerrada com sucesso.');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    SGM.toast(retorno.message || 'Falha ao encerrar OS.', 'error');
                 }
             } catch (err) {
                 SGM.toast('Erro de conexão: ' + err.message, 'error');

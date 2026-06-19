@@ -43,9 +43,21 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                 </div>
             </div>
         </div>
-        <div id="areaFechamento"></div>
+        <div id="areaFechamento">
+            <?php if (!$isGestor) : ?>
+            <div class="sgm-card mt-4" id="cardFecharOSTecnico" style="display: none;">
+                <div class="sgm-card-header bg-danger text-white">
+                    <span>Ações da Tarefa</span>
+                </div>
+                <div class="sgm-card-pad">
+                    <button type="button" id="btnFecharOSTecnico" class="btn btn-danger w-100 py-3 rounded-pill fw-bold">
+                        Encerrar OS <i class="bi bi-check-circle ms-2"></i>
+                    </button>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
     </div>
-
     <?php if ($isGestor) : ?>
     <div class="col-lg-4">
         <div class="sgm-card sticky-top" style="top: 100px; z-index: 800;">
@@ -77,6 +89,11 @@ require_once __DIR__ . '/includes/app_layout_start.php';
                         Atualizar Gestão <i class="bi bi-save2 ms-2"></i>
                     </button>
                 </form>
+                
+                <hr class="my-4">
+                <button type="button" id="btnFecharOS" class="btn btn-danger w-100 py-3 rounded-pill fw-bold" style="display: none;">
+                    Encerrar OS <i class="bi bi-check-circle ms-2"></i>
+                </button>
             </div>
         </div>
     </div>

@@ -21,8 +21,12 @@
     function abrirModal(id, titulo) {
         concluirId = id;
         document.getElementById('concluirTitulo').textContent = '#' + id + ' — ' + titulo;
-        document.getElementById('concluirDesc').textContent = 'Confirme a conclusão deste chamado. Opcionalmente, adicione uma observação.';
+        document.getElementById('concluirDesc').textContent = 'Confirme a conclusão deste chamado fornecendo a data/hora e uma foto de evidência.';
         document.getElementById('concluirFeedback').value = '';
+        document.getElementById('concluirFoto').value = '';
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('concluirData').value = now.toISOString().slice(0,16);
         var modal = new bootstrap.Modal(document.getElementById('modalConcluir'));
         modal.show();
     }
@@ -65,17 +69,18 @@
                 var resumo = (c.titulo || c.descricao_problema || '').toString();
                 if (resumo.length > 120) resumo = resumo.substring(0, 120) + '\u2026';
                 var idEnc = encodeURIComponent(c.id_chamado);
+                var bgBadge = pr === 'critica' ? 'danger' : pr === 'alta' ? 'warning' : pr === 'media' ? 'primary' : 'info';
+                
                 return (
-                    '<div class="sgm-task-card ' +
-                    priorClass(pr) +
-                    '" data-id="' + idEnc + '">' +
+                    '<div class="sgm-card mb-4" data-id="' + idEnc + '">' +
+                    '<div class="sgm-card-pad">' +
                     '<div class="row align-items-center g-3">' +
                     '<div class="col-md-8">' +
                     '<div class="d-flex flex-wrap align-items-center gap-2 mb-2">' +
-                    '<span class="badge text-bg-light border">#' +
+                    '<span class="badge text-bg-light border px-2 py-1">#' +
                     SGM.escapeHtml(String(c.id_chamado)) +
                     '</span>' +
-                    '<span class="badge sgm-badge text-bg-secondary text-uppercase">' +
+                    '<span class="badge sgm-badge text-bg-' + bgBadge + ' text-uppercase">' +
                     SGM.escapeHtml(pr) +
                     '</span>' +
                     '<span class="small text-muted">' +
@@ -106,7 +111,7 @@
                     SGM.escapeHtml(c.titulo || 'Chamado') +
                     '"><i class="bi bi-check2-circle me-1"></i>Concluir</button>' +
                     '</div>' +
-                    '</div></div></div>'
+                    '</div></div></div></div>'
                 );
             })
             .join('');
@@ -123,21 +128,41 @@
 
     document.getElementById('btnConfirmarConcluir').addEventListener('click', async function () {
         if (!concluirId) return;
+        
+        var inputData = document.getElementById('concluirData');
+        var inputFoto = document.getElementById('concluirFoto');
+        
+        if (!inputData.value) {
+            SGM.toast('Informe a data e hora da conclusão.', 'warning');
+            return;
+        }
+        if (!inputFoto.files || inputFoto.files.length === 0) {
+            SGM.toast('A foto de evidência é obrigatória.', 'warning');
+            return;
+        }
+
         var btn = this;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Salvando...';
 
+        var formData = new FormData();
+        formData.append('id_chamado', concluirId);
+        formData.append('feedback', document.getElementById('concluirFeedback').value);
+        formData.append('data_conclusao', inputData.value);
+        formData.append('foto_conclusao', inputFoto.files[0]);
+
         try {
-            var r = await SGM.fetchJson('api/concluir_chamado.php', 'POST', {
-                id_chamado: concluirId,
-                feedback: document.getElementById('concluirFeedback').value,
+            var res = await fetch('api/concluir_chamado.php', {
+                method: 'POST',
+                body: formData
             });
-            if (r.data && r.data.success) {
-                SGM.toast(r.data.message || 'Conclu\u00eddo com sucesso.');
+            var r = await res.json();
+            if (r.success) {
+                SGM.toast(r.message || 'Conclu\u00eddo com sucesso.');
                 bootstrap.Modal.getInstance(document.getElementById('modalConcluir')).hide();
                 carregar();
             } else {
-                SGM.toast(r.data.message || 'Falha ao concluir.', 'error');
+                SGM.toast(r.message || 'Falha ao concluir.', 'error');
             }
         } catch (err) {
             SGM.toast('Erro: ' + err.message, 'error');
@@ -147,5 +172,8 @@
         }
     });
 
-    document.addEventListener('DOMContentLoaded', carregar);
+    document.addEventListener('DOMContentLoaded', function() {
+        carregar();
+        setInterval(carregar, 120000);
+    });
 })();

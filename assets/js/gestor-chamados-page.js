@@ -52,7 +52,7 @@
         }).join('');
     }
 
-    async function carregarChamados() {
+    async function carregarChamados(silent = false) {
         var q = document.getElementById('gc-busca').value.trim();
         var status = '';
         var radios = document.getElementsByName('fstatus');
@@ -63,7 +63,9 @@
         var url = API_CH + '?q=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(status);
         
         // Loader visual
-        document.getElementById('tabelaGeral').innerHTML = '<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Consultando banco...</td></tr>';
+        if (!silent) {
+            document.getElementById('tabelaGeral').innerHTML = '<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Consultando banco...</td></tr>';
+        }
 
         var r = await SGM.fetchJson(url);
         if (r.res.ok && r.data && r.data.success) {
@@ -87,5 +89,10 @@
         });
         
         document.getElementById('gc-busca').addEventListener('input', debounceBusca);
+        
+        setInterval(function() {
+            loadStats();
+            carregarChamados(true);
+        }, 120000);
     });
 })();
